@@ -1,0 +1,991 @@
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/17/17 20:21:22 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+   1  set     n       Pizza Targets /0*7/;
+   2   
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/17/17 20:21:22 Page 2
+Madison TSP Model
+C o m p i l a t i o n
+
+
+   5   
+   6   
+   7  alias (i,j,n);
+   8  set ks(i)/0/;
+   9  set m number of cars/1*3/;
+  10  table   c(i,j)  Travel distances
+INCLUDE    D:\Learning\Graduate\isye524\project\submit\Model2\dictionary\distance.csv
+  13  ,0,1,2,3,4,5,6,7
+  14  0,0.00,254.50,404.83,669.22,731.77,566.24,436.23,296.28
+  15  1,134.89,0.00,539.72,804.10,828.23,701.13,181.73,161.95
+  16  2,311.81,414.75,0.00,342.14,423.68,239.16,596.48,409.01
+  17  3,649.12,752.06,348.01,0.00,81.53,102.98,933.79,623.84
+  18  4,730.65,833.60,429.54,81.53,0.00,184.51,1015.32,705.38
+  19  5,548.85,651.79,246.61,102.98,184.51,0.00,833.52,523.57
+  20  6,316.61,181.73,721.45,985.83,1009.96,882.85,0.00,343.67
+  21  7,296.83,161.95,701.67,759.89,695.06,697.17,343.67,0.00
+  23  ;
+  24   
+  25  binary variable        X(m,i,j)  Travel assignment;
+  26   
+  27  variable        OBJ     Objective function;
+  28   
+  29  variable U(m,i) Position of node in tour;
+  30  variable len_each(m);
+  31  equations       objdef, out, in,lendef,initc,initcend,consistdef;
+  32   
+  33  lendef(m)..        len_each(m) =e= sum((i,j),c(i,j)*X(m,i,j));
+  34   
+  35  out(i)$(ord(i)>1)..        sum((m,j),X(m,i,j)) =e= 1;
+  36   
+  37  in(j)$(ord(j)>1)..         sum((m,i),X(m,i,j)) =e= 1;
+  38  initc(m)..         sum(j,X(m,'0',j)) =e= 1;
+  39  initcend(m)..      sum(i,X(m,i,'0')) =e= 1;
+  40  objdef(m)..     obj=g=len_each(m);
+  41  consistdef(m,i)..        sum(n,X(m,n,i)) =e= sum(n,X(m,i,n));
+  42  X.FX(m,i,i) = 0;
+  43   
+  44   
+  45  equation subtour;
+  46  subtour(m,i,j)$(ord(j)>1).. U(m,i) - U(m,j) + card(n) *X(m,i,j) =L= card(n) - 1;
+  47  U.LO(m,i) = 1;
+  48  U.UP(m,i) = card(n);
+  49  model mtz /all/;
+  50   
+  51  solve mtz using mip minimizing OBJ;
+  52   
+  53  option X:0:0:1;
+  54  display X.L;
+  55  parameter route;
+  56  route(m,i,j)=x.l(m,i,j)$(x.l(m,i,j)>0) ;
+  57  execute_unload 'Madison_pizza.gdx',route;
+  58  execute 'gdxxrw.exe i=Madison_pizza.gdx o=route.xls par=route rdim=3' ;
+  59   
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/17/17 20:21:22 Page 3
+Madison TSP Model
+Include File Summary
+
+
+   SEQ   GLOBAL TYPE      PARENT   LOCAL  FILENAME
+
+     1        1 INPUT          0       0  D:\Learning\Graduate\isye524\project\submit\Model2\dictionary\MadisonTSP.gms
+     2       12 INCLUDE        1      12  .D:\Learning\Graduate\isye524\project\submit\Model2\dictionary\distance.csv
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/17/17 20:21:22 Page 4
+Madison TSP Model
+Equation Listing    SOLVE mtz Using MIP From line 51
+
+
+---- objdef  =G=  
+
+objdef(1)..  OBJ - len_each(1) =G= 0 ; (LHS = 0)
+     
+objdef(2)..  OBJ - len_each(2) =G= 0 ; (LHS = 0)
+     
+objdef(3)..  OBJ - len_each(3) =G= 0 ; (LHS = 0)
+     
+
+---- out  =E=  
+
+out(1)..  X(1,1,0) + X(1,1,1) + X(1,1,2) + X(1,1,3) + X(1,1,4) + X(1,1,5) + X(1,1,6) + X(1,1,7) + X(2,1,0) + X(2,1,1) + X(2,1,2) + X(2,1,3) + X(2,1,4) + X(2,1,5) + X(2,1,6) + X(2,1,7) + X(3,1,0) + X(3,1,1) + X(3,1,2) + X(3,1,3) + X(3,1,4) + X(3,1,5)
+     
+      + X(3,1,6) + X(3,1,7) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+out(2)..  X(1,2,0) + X(1,2,1) + X(1,2,2) + X(1,2,3) + X(1,2,4) + X(1,2,5) + X(1,2,6) + X(1,2,7) + X(2,2,0) + X(2,2,1) + X(2,2,2) + X(2,2,3) + X(2,2,4) + X(2,2,5) + X(2,2,6) + X(2,2,7) + X(3,2,0) + X(3,2,1) + X(3,2,2) + X(3,2,3) + X(3,2,4) + X(3,2,5)
+     
+      + X(3,2,6) + X(3,2,7) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+out(3)..  X(1,3,0) + X(1,3,1) + X(1,3,2) + X(1,3,3) + X(1,3,4) + X(1,3,5) + X(1,3,6) + X(1,3,7) + X(2,3,0) + X(2,3,1) + X(2,3,2) + X(2,3,3) + X(2,3,4) + X(2,3,5) + X(2,3,6) + X(2,3,7) + X(3,3,0) + X(3,3,1) + X(3,3,2) + X(3,3,3) + X(3,3,4) + X(3,3,5)
+     
+      + X(3,3,6) + X(3,3,7) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 4 ENTRIES SKIPPED
+
+
+---- in  =E=  
+
+in(1)..  X(1,0,1) + X(1,1,1) + X(1,2,1) + X(1,3,1) + X(1,4,1) + X(1,5,1) + X(1,6,1) + X(1,7,1) + X(2,0,1) + X(2,1,1) + X(2,2,1) + X(2,3,1) + X(2,4,1) + X(2,5,1) + X(2,6,1) + X(2,7,1) + X(3,0,1) + X(3,1,1) + X(3,2,1) + X(3,3,1) + X(3,4,1) + X(3,5,1)
+     
+      + X(3,6,1) + X(3,7,1) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+in(2)..  X(1,0,2) + X(1,1,2) + X(1,2,2) + X(1,3,2) + X(1,4,2) + X(1,5,2) + X(1,6,2) + X(1,7,2) + X(2,0,2) + X(2,1,2) + X(2,2,2) + X(2,3,2) + X(2,4,2) + X(2,5,2) + X(2,6,2) + X(2,7,2) + X(3,0,2) + X(3,1,2) + X(3,2,2) + X(3,3,2) + X(3,4,2) + X(3,5,2)
+     
+      + X(3,6,2) + X(3,7,2) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+in(3)..  X(1,0,3) + X(1,1,3) + X(1,2,3) + X(1,3,3) + X(1,4,3) + X(1,5,3) + X(1,6,3) + X(1,7,3) + X(2,0,3) + X(2,1,3) + X(2,2,3) + X(2,3,3) + X(2,4,3) + X(2,5,3) + X(2,6,3) + X(2,7,3) + X(3,0,3) + X(3,1,3) + X(3,2,3) + X(3,3,3) + X(3,4,3) + X(3,5,3)
+     
+      + X(3,6,3) + X(3,7,3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 4 ENTRIES SKIPPED
+
+
+---- lendef  =E=  
+
+lendef(1)..  - 254.5*X(1,0,1) - 404.83*X(1,0,2) - 669.22*X(1,0,3) - 731.77*X(1,0,4) - 566.24*X(1,0,5) - 436.23*X(1,0,6) - 296.28*X(1,0,7) - 134.89*X(1,1,0) - 539.72*X(1,1,2) - 804.1*X(1,1,3) - 828.23*X(1,1,4) - 701.13*X(1,1,5) - 181.73*X(1,1,6)
+     
+      - 161.95*X(1,1,7) - 311.81*X(1,2,0) - 414.75*X(1,2,1) - 342.14*X(1,2,3) - 423.68*X(1,2,4) - 239.16*X(1,2,5) - 596.48*X(1,2,6) - 409.01*X(1,2,7) - 649.12*X(1,3,0) - 752.06*X(1,3,1) - 348.01*X(1,3,2) - 81.53*X(1,3,4) - 102.98*X(1,3,5)
+     
+      - 933.79*X(1,3,6) - 623.84*X(1,3,7) - 730.65*X(1,4,0) - 833.6*X(1,4,1) - 429.54*X(1,4,2) - 81.53*X(1,4,3) - 184.51*X(1,4,5) - 1015.32*X(1,4,6) - 705.38*X(1,4,7) - 548.85*X(1,5,0) - 651.79*X(1,5,1) - 246.61*X(1,5,2) - 102.98*X(1,5,3)
+     
+      - 184.51*X(1,5,4) - 833.52*X(1,5,6) - 523.57*X(1,5,7) - 316.61*X(1,6,0) - 181.73*X(1,6,1) - 721.45*X(1,6,2) - 985.83*X(1,6,3) - 1009.96*X(1,6,4) - 882.85*X(1,6,5) - 343.67*X(1,6,7) - 296.83*X(1,7,0) - 161.95*X(1,7,1) - 701.67*X(1,7,2)
+     
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/17/17 20:21:22 Page 5
+Madison TSP Model
+Equation Listing    SOLVE mtz Using MIP From line 51
+
+
+     lendef  =E=       
+     
+      - 759.89*X(1,7,3) - 695.06*X(1,7,4) - 697.17*X(1,7,5) - 343.67*X(1,7,6) + len_each(1) =E= 0 ; (LHS = 0)
+     
+lendef(2)..  - 254.5*X(2,0,1) - 404.83*X(2,0,2) - 669.22*X(2,0,3) - 731.77*X(2,0,4) - 566.24*X(2,0,5) - 436.23*X(2,0,6) - 296.28*X(2,0,7) - 134.89*X(2,1,0) - 539.72*X(2,1,2) - 804.1*X(2,1,3) - 828.23*X(2,1,4) - 701.13*X(2,1,5) - 181.73*X(2,1,6)
+     
+      - 161.95*X(2,1,7) - 311.81*X(2,2,0) - 414.75*X(2,2,1) - 342.14*X(2,2,3) - 423.68*X(2,2,4) - 239.16*X(2,2,5) - 596.48*X(2,2,6) - 409.01*X(2,2,7) - 649.12*X(2,3,0) - 752.06*X(2,3,1) - 348.01*X(2,3,2) - 81.53*X(2,3,4) - 102.98*X(2,3,5)
+     
+      - 933.79*X(2,3,6) - 623.84*X(2,3,7) - 730.65*X(2,4,0) - 833.6*X(2,4,1) - 429.54*X(2,4,2) - 81.53*X(2,4,3) - 184.51*X(2,4,5) - 1015.32*X(2,4,6) - 705.38*X(2,4,7) - 548.85*X(2,5,0) - 651.79*X(2,5,1) - 246.61*X(2,5,2) - 102.98*X(2,5,3)
+     
+      - 184.51*X(2,5,4) - 833.52*X(2,5,6) - 523.57*X(2,5,7) - 316.61*X(2,6,0) - 181.73*X(2,6,1) - 721.45*X(2,6,2) - 985.83*X(2,6,3) - 1009.96*X(2,6,4) - 882.85*X(2,6,5) - 343.67*X(2,6,7) - 296.83*X(2,7,0) - 161.95*X(2,7,1) - 701.67*X(2,7,2)
+     
+      - 759.89*X(2,7,3) - 695.06*X(2,7,4) - 697.17*X(2,7,5) - 343.67*X(2,7,6) + len_each(2) =E= 0 ; (LHS = 0)
+     
+lendef(3)..  - 254.5*X(3,0,1) - 404.83*X(3,0,2) - 669.22*X(3,0,3) - 731.77*X(3,0,4) - 566.24*X(3,0,5) - 436.23*X(3,0,6) - 296.28*X(3,0,7) - 134.89*X(3,1,0) - 539.72*X(3,1,2) - 804.1*X(3,1,3) - 828.23*X(3,1,4) - 701.13*X(3,1,5) - 181.73*X(3,1,6)
+     
+      - 161.95*X(3,1,7) - 311.81*X(3,2,0) - 414.75*X(3,2,1) - 342.14*X(3,2,3) - 423.68*X(3,2,4) - 239.16*X(3,2,5) - 596.48*X(3,2,6) - 409.01*X(3,2,7) - 649.12*X(3,3,0) - 752.06*X(3,3,1) - 348.01*X(3,3,2) - 81.53*X(3,3,4) - 102.98*X(3,3,5)
+     
+      - 933.79*X(3,3,6) - 623.84*X(3,3,7) - 730.65*X(3,4,0) - 833.6*X(3,4,1) - 429.54*X(3,4,2) - 81.53*X(3,4,3) - 184.51*X(3,4,5) - 1015.32*X(3,4,6) - 705.38*X(3,4,7) - 548.85*X(3,5,0) - 651.79*X(3,5,1) - 246.61*X(3,5,2) - 102.98*X(3,5,3)
+     
+      - 184.51*X(3,5,4) - 833.52*X(3,5,6) - 523.57*X(3,5,7) - 316.61*X(3,6,0) - 181.73*X(3,6,1) - 721.45*X(3,6,2) - 985.83*X(3,6,3) - 1009.96*X(3,6,4) - 882.85*X(3,6,5) - 343.67*X(3,6,7) - 296.83*X(3,7,0) - 161.95*X(3,7,1) - 701.67*X(3,7,2)
+     
+      - 759.89*X(3,7,3) - 695.06*X(3,7,4) - 697.17*X(3,7,5) - 343.67*X(3,7,6) + len_each(3) =E= 0 ; (LHS = 0)
+     
+
+---- initc  =E=  
+
+initc(1)..  X(1,0,0) + X(1,0,1) + X(1,0,2) + X(1,0,3) + X(1,0,4) + X(1,0,5) + X(1,0,6) + X(1,0,7) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+initc(2)..  X(2,0,0) + X(2,0,1) + X(2,0,2) + X(2,0,3) + X(2,0,4) + X(2,0,5) + X(2,0,6) + X(2,0,7) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+initc(3)..  X(3,0,0) + X(3,0,1) + X(3,0,2) + X(3,0,3) + X(3,0,4) + X(3,0,5) + X(3,0,6) + X(3,0,7) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+
+---- initcend  =E=  
+
+initcend(1)..  X(1,0,0) + X(1,1,0) + X(1,2,0) + X(1,3,0) + X(1,4,0) + X(1,5,0) + X(1,6,0) + X(1,7,0) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+initcend(2)..  X(2,0,0) + X(2,1,0) + X(2,2,0) + X(2,3,0) + X(2,4,0) + X(2,5,0) + X(2,6,0) + X(2,7,0) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+initcend(3)..  X(3,0,0) + X(3,1,0) + X(3,2,0) + X(3,3,0) + X(3,4,0) + X(3,5,0) + X(3,6,0) + X(3,7,0) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+
+---- consistdef  =E=  
+
+consistdef(1,0)..  - X(1,0,1) - X(1,0,2) - X(1,0,3) - X(1,0,4) - X(1,0,5) - X(1,0,6) - X(1,0,7) + X(1,1,0) + X(1,2,0) + X(1,3,0) + X(1,4,0) + X(1,5,0) + X(1,6,0) + X(1,7,0) =E= 0 ; (LHS = 0)
+     
+consistdef(1,1)..  X(1,0,1) - X(1,1,0) - X(1,1,2) - X(1,1,3) - X(1,1,4) - X(1,1,5) - X(1,1,6) - X(1,1,7) + X(1,2,1) + X(1,3,1) + X(1,4,1) + X(1,5,1) + X(1,6,1) + X(1,7,1) =E= 0 ; (LHS = 0)
+     
+consistdef(1,2)..  X(1,0,2) + X(1,1,2) - X(1,2,0) - X(1,2,1) - X(1,2,3) - X(1,2,4) - X(1,2,5) - X(1,2,6) - X(1,2,7) + X(1,3,2) + X(1,4,2) + X(1,5,2) + X(1,6,2) + X(1,7,2) =E= 0 ; (LHS = 0)
+     
+REMAINING 21 ENTRIES SKIPPED
+
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/17/17 20:21:22 Page 6
+Madison TSP Model
+Equation Listing    SOLVE mtz Using MIP From line 51
+
+
+---- subtour  =L=  
+
+subtour(1,0,1)..  8*X(1,0,1) + U(1,0) - U(1,1) =L= 7 ; (LHS = 0)
+     
+subtour(1,0,2)..  8*X(1,0,2) + U(1,0) - U(1,2) =L= 7 ; (LHS = 0)
+     
+subtour(1,0,3)..  8*X(1,0,3) + U(1,0) - U(1,3) =L= 7 ; (LHS = 0)
+     
+REMAINING 165 ENTRIES SKIPPED
+
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/17/17 20:21:22 Page 7
+Madison TSP Model
+Column Listing      SOLVE mtz Using MIP From line 51
+
+
+---- X  Travel assignment
+
+X(1,0,0)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+        1       initc(1)
+        1       initcend(1)
+
+X(1,0,1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       in(1)
+     -254.5     lendef(1)
+        1       initc(1)
+       -1       consistdef(1,0)
+        1       consistdef(1,1)
+        8       subtour(1,0,1)
+
+X(1,0,2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       in(2)
+     -404.83    lendef(1)
+        1       initc(1)
+       -1       consistdef(1,0)
+        1       consistdef(1,2)
+        8       subtour(1,0,2)
+
+REMAINING 189 ENTRIES SKIPPED
+
+---- OBJ  Objective function
+
+OBJ
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       objdef(1)
+        1       objdef(2)
+        1       objdef(3)
+
+
+---- U  Position of node in tour
+
+U(1,0)
+                (.LO, .L, .UP, .M = 1, 1, 8, 0)
+        1       subtour(1,0,1)
+        1       subtour(1,0,2)
+        1       subtour(1,0,3)
+        1       subtour(1,0,4)
+        1       subtour(1,0,5)
+        1       subtour(1,0,6)
+        1       subtour(1,0,7)
+        0       (OLD LEVEL ****)
+
+U(1,1)
+                (.LO, .L, .UP, .M = 1, 1, 8, 0)
+       -1       subtour(1,0,1)
+        1       subtour(1,1,2)
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/17/17 20:21:22 Page 8
+Madison TSP Model
+Column Listing      SOLVE mtz Using MIP From line 51
+
+
+     U  Position of node in tour
+
+        1       subtour(1,1,3)
+        1       subtour(1,1,4)
+        1       subtour(1,1,5)
+        1       subtour(1,1,6)
+        1       subtour(1,1,7)
+       -1       subtour(1,2,1)
+       -1       subtour(1,3,1)
+       -1       subtour(1,4,1)
+       -1       subtour(1,5,1)
+       -1       subtour(1,6,1)
+       -1       subtour(1,7,1)
+        0       (OLD LEVEL ****)
+
+U(1,2)
+                (.LO, .L, .UP, .M = 1, 1, 8, 0)
+       -1       subtour(1,0,2)
+       -1       subtour(1,1,2)
+        1       subtour(1,2,1)
+        1       subtour(1,2,3)
+        1       subtour(1,2,4)
+        1       subtour(1,2,5)
+        1       subtour(1,2,6)
+        1       subtour(1,2,7)
+       -1       subtour(1,3,2)
+       -1       subtour(1,4,2)
+       -1       subtour(1,5,2)
+       -1       subtour(1,6,2)
+       -1       subtour(1,7,2)
+        0       (OLD LEVEL ****)
+
+REMAINING 21 ENTRIES SKIPPED
+
+---- len_each  
+
+len_each(1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       objdef(1)
+        1       lendef(1)
+
+len_each(2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       objdef(2)
+        1       lendef(2)
+
+len_each(3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       objdef(3)
+        1       lendef(3)
+
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/17/17 20:21:22 Page 9
+Madison TSP Model
+Model Statistics    SOLVE mtz Using MIP From line 51
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           8     SINGLE EQUATIONS          218
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES          220  24 projected
+NON ZERO ELEMENTS         1,359     DISCRETE VARIABLES        168
+
+
+GENERATION TIME      =        0.016 SECONDS      4 MB  24.9.1 r63795 WEX-WEI
+
+
+EXECUTION TIME       =        0.016 SECONDS      4 MB  24.9.1 r63795 WEX-WEI
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:21:22 Page 10
+Madison TSP Model
+Solution Report     SOLVE mtz Using MIP From line 51
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   mtz                 OBJECTIVE  OBJ
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  51
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      8 Integer Solution          
+**** OBJECTIVE VALUE             1462.4200
+
+ RESOURCE USAGE, LIMIT          0.157      1000.000
+ ITERATION COUNT, LIMIT      4364    2000000000
+
+IBM ILOG CPLEX   24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
+--- GAMS/Cplex licensed for continuous and discrete problems.
+Cplex 12.7.1.0
+
+Space for names approximately 0.01 Mb
+Use option 'names no' to turn use of names off
+MIP status(102): integer optimal, tolerance
+Cplex Time: 0.16sec (det. 101.12 ticks)
+Fixing integer variables, and solving final LP...
+Fixed MIP status(1): optimal
+Cplex Time: 0.00sec (det. 0.20 ticks)
+Solution satisfies tolerances.
+
+MIP Solution:         1462.420000    (4364 iterations, 647 nodes)
+Final Solve:          1462.420000    (0 iterations)
+
+Best possible:        1317.920000
+Absolute gap:          144.500000
+Relative gap:            0.098809
+
+
+---- EQU objdef  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1          .           133.3800        +INF             .          
+2          .              .            +INF            1.0000      
+3          .           505.8500        +INF             .          
+
+---- EQU out  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1         1.0000         1.0000         1.0000          .          
+2         1.0000         1.0000         1.0000          .          
+3         1.0000         1.0000         1.0000          .          
+4         1.0000         1.0000         1.0000          .          
+5         1.0000         1.0000         1.0000          .          
+6         1.0000         1.0000         1.0000          .          
+7         1.0000         1.0000         1.0000          .          
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:21:22 Page 11
+Madison TSP Model
+Solution Report     SOLVE mtz Using MIP From line 51
+
+
+---- EQU in  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1         1.0000         1.0000         1.0000          .          
+2         1.0000         1.0000         1.0000          .          
+3         1.0000         1.0000         1.0000          .          
+4         1.0000         1.0000         1.0000          .          
+5         1.0000         1.0000         1.0000          .          
+6         1.0000         1.0000         1.0000          .          
+7         1.0000         1.0000         1.0000          .          
+
+---- EQU lendef  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1          .              .              .             EPS         
+2          .              .              .             1.0000      
+3          .              .              .             EPS         
+
+---- EQU initc  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1         1.0000         1.0000         1.0000          .          
+2         1.0000         1.0000         1.0000          .          
+3         1.0000         1.0000         1.0000          .          
+
+---- EQU initcend  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1         1.0000         1.0000         1.0000          .          
+2         1.0000         1.0000         1.0000          .          
+3         1.0000         1.0000         1.0000          .          
+
+---- EQU consistdef  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+1.0          .              .              .              .          
+1.1          .              .              .              .          
+1.2          .              .              .              .          
+1.3          .              .              .              .          
+1.4          .              .              .              .          
+1.5          .              .              .              .          
+1.6          .              .              .              .          
+1.7          .              .              .              .          
+2.0          .              .              .              .          
+2.1          .              .              .              .          
+2.2          .              .              .              .          
+2.3          .              .              .              .          
+2.4          .              .              .              .          
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:21:22 Page 12
+Madison TSP Model
+Solution Report     SOLVE mtz Using MIP From line 51
+
+
+     EQU consistdef  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+2.5          .              .              .              .          
+2.6          .              .              .              .          
+2.7          .              .              .              .          
+3.0          .              .              .              .          
+3.1          .              .              .              .          
+3.2          .              .              .              .          
+3.3          .              .              .              .          
+3.4          .              .              .              .          
+3.5          .              .              .              .          
+3.6          .              .              .              .          
+3.7          .              .              .              .          
+
+---- EQU subtour  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+1.0.1        -INF             .             7.0000          .          
+1.0.2        -INF           -7.0000         7.0000          .          
+1.0.3        -INF           -6.0000         7.0000          .          
+1.0.4        -INF             .             7.0000          .          
+1.0.5        -INF            7.0000         7.0000         EPS         
+1.0.6        -INF             .             7.0000          .          
+1.0.7        -INF             .             7.0000          .          
+1.1.1        -INF             .             7.0000          .          
+1.1.2        -INF           -7.0000         7.0000          .          
+1.1.3        -INF           -6.0000         7.0000          .          
+1.1.4        -INF             .             7.0000          .          
+1.1.5        -INF           -1.0000         7.0000          .          
+1.1.6        -INF             .             7.0000          .          
+1.1.7        -INF             .             7.0000          .          
+1.2.1        -INF            7.0000         7.0000          .          
+1.2.2        -INF             .             7.0000          .          
+1.2.3        -INF            1.0000         7.0000          .          
+1.2.4        -INF            7.0000         7.0000          .          
+1.2.5        -INF            6.0000         7.0000          .          
+1.2.6        -INF            7.0000         7.0000          .          
+1.2.7        -INF            7.0000         7.0000          .          
+1.3.1        -INF            6.0000         7.0000          .          
+1.3.2        -INF            7.0000         7.0000         EPS         
+1.3.3        -INF             .             7.0000          .          
+1.3.4        -INF            6.0000         7.0000          .          
+1.3.5        -INF            5.0000         7.0000          .          
+1.3.6        -INF            6.0000         7.0000          .          
+1.3.7        -INF            6.0000         7.0000          .          
+1.4.1        -INF             .             7.0000          .          
+1.4.2        -INF           -7.0000         7.0000          .          
+1.4.3        -INF           -6.0000         7.0000          .          
+1.4.4        -INF             .             7.0000          .          
+1.4.5        -INF           -1.0000         7.0000          .          
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:21:22 Page 13
+Madison TSP Model
+Solution Report     SOLVE mtz Using MIP From line 51
+
+
+     EQU subtour  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+1.4.6        -INF             .             7.0000          .          
+1.4.7        -INF             .             7.0000          .          
+1.5.1        -INF            1.0000         7.0000          .          
+1.5.2        -INF           -6.0000         7.0000          .          
+1.5.3        -INF            3.0000         7.0000          .          
+1.5.4        -INF            1.0000         7.0000          .          
+1.5.5        -INF             .             7.0000          .          
+1.5.6        -INF            1.0000         7.0000          .          
+1.5.7        -INF            1.0000         7.0000          .          
+1.6.1        -INF             .             7.0000          .          
+1.6.2        -INF           -7.0000         7.0000          .          
+1.6.3        -INF           -6.0000         7.0000          .          
+1.6.4        -INF             .             7.0000          .          
+1.6.5        -INF           -1.0000         7.0000          .          
+1.6.6        -INF             .             7.0000          .          
+1.6.7        -INF             .             7.0000          .          
+1.7.1        -INF             .             7.0000          .          
+1.7.2        -INF           -7.0000         7.0000          .          
+1.7.3        -INF           -6.0000         7.0000          .          
+1.7.4        -INF             .             7.0000          .          
+1.7.5        -INF           -1.0000         7.0000          .          
+1.7.6        -INF             .             7.0000          .          
+1.7.7        -INF             .             7.0000          .          
+2.0.1        -INF             .             7.0000          .          
+2.0.2        -INF             .             7.0000          .          
+2.0.3        -INF             .             7.0000          .          
+2.0.4        -INF            7.0000         7.0000         EPS         
+2.0.5        -INF             .             7.0000          .          
+2.0.6        -INF             .             7.0000          .          
+2.0.7        -INF             .             7.0000          .          
+2.1.1        -INF             .             7.0000          .          
+2.1.2        -INF             .             7.0000          .          
+2.1.3        -INF             .             7.0000          .          
+2.1.4        -INF           -1.0000         7.0000          .          
+2.1.5        -INF             .             7.0000          .          
+2.1.6        -INF             .             7.0000          .          
+2.1.7        -INF             .             7.0000          .          
+2.2.1        -INF             .             7.0000          .          
+2.2.2        -INF             .             7.0000          .          
+2.2.3        -INF             .             7.0000          .          
+2.2.4        -INF           -1.0000         7.0000          .          
+2.2.5        -INF             .             7.0000          .          
+2.2.6        -INF             .             7.0000          .          
+2.2.7        -INF             .             7.0000          .          
+2.3.1        -INF             .             7.0000          .          
+2.3.2        -INF             .             7.0000          .          
+2.3.3        -INF             .             7.0000          .          
+2.3.4        -INF           -1.0000         7.0000          .          
+2.3.5        -INF             .             7.0000          .          
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:21:22 Page 14
+Madison TSP Model
+Solution Report     SOLVE mtz Using MIP From line 51
+
+
+     EQU subtour  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+2.3.6        -INF             .             7.0000          .          
+2.3.7        -INF             .             7.0000          .          
+2.4.1        -INF            1.0000         7.0000          .          
+2.4.2        -INF            1.0000         7.0000          .          
+2.4.3        -INF            1.0000         7.0000          .          
+2.4.4        -INF             .             7.0000          .          
+2.4.5        -INF            1.0000         7.0000          .          
+2.4.6        -INF            1.0000         7.0000          .          
+2.4.7        -INF            1.0000         7.0000          .          
+2.5.1        -INF             .             7.0000          .          
+2.5.2        -INF             .             7.0000          .          
+2.5.3        -INF             .             7.0000          .          
+2.5.4        -INF           -1.0000         7.0000          .          
+2.5.5        -INF             .             7.0000          .          
+2.5.6        -INF             .             7.0000          .          
+2.5.7        -INF             .             7.0000          .          
+2.6.1        -INF             .             7.0000          .          
+2.6.2        -INF             .             7.0000          .          
+2.6.3        -INF             .             7.0000          .          
+2.6.4        -INF           -1.0000         7.0000          .          
+2.6.5        -INF             .             7.0000          .          
+2.6.6        -INF             .             7.0000          .          
+2.6.7        -INF             .             7.0000          .          
+2.7.1        -INF             .             7.0000          .          
+2.7.2        -INF             .             7.0000          .          
+2.7.3        -INF             .             7.0000          .          
+2.7.4        -INF           -1.0000         7.0000          .          
+2.7.5        -INF             .             7.0000          .          
+2.7.6        -INF             .             7.0000          .          
+2.7.7        -INF             .             7.0000          .          
+3.0.1        -INF           -6.0000         7.0000          .          
+3.0.2        -INF             .             7.0000          .          
+3.0.3        -INF             .             7.0000          .          
+3.0.4        -INF             .             7.0000          .          
+3.0.5        -INF             .             7.0000          .          
+3.0.6        -INF           -7.0000         7.0000          .          
+3.0.7        -INF            7.0000         7.0000         EPS         
+3.1.1        -INF             .             7.0000          .          
+3.1.2        -INF            6.0000         7.0000          .          
+3.1.3        -INF            6.0000         7.0000          .          
+3.1.4        -INF            6.0000         7.0000          .          
+3.1.5        -INF            6.0000         7.0000          .          
+3.1.6        -INF            7.0000         7.0000         EPS         
+3.1.7        -INF            5.0000         7.0000          .          
+3.2.1        -INF           -6.0000         7.0000          .          
+3.2.2        -INF             .             7.0000          .          
+3.2.3        -INF             .             7.0000          .          
+3.2.4        -INF             .             7.0000          .          
+3.2.5        -INF             .             7.0000          .          
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:21:22 Page 15
+Madison TSP Model
+Solution Report     SOLVE mtz Using MIP From line 51
+
+
+     EQU subtour  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+3.2.6        -INF           -7.0000         7.0000          .          
+3.2.7        -INF           -1.0000         7.0000          .          
+3.3.1        -INF           -6.0000         7.0000          .          
+3.3.2        -INF             .             7.0000          .          
+3.3.3        -INF             .             7.0000          .          
+3.3.4        -INF             .             7.0000          .          
+3.3.5        -INF             .             7.0000          .          
+3.3.6        -INF           -7.0000         7.0000          .          
+3.3.7        -INF           -1.0000         7.0000          .          
+3.4.1        -INF           -6.0000         7.0000          .          
+3.4.2        -INF             .             7.0000          .          
+3.4.3        -INF             .             7.0000          .          
+3.4.4        -INF             .             7.0000          .          
+3.4.5        -INF             .             7.0000          .          
+3.4.6        -INF           -7.0000         7.0000          .          
+3.4.7        -INF           -1.0000         7.0000          .          
+3.5.1        -INF           -6.0000         7.0000          .          
+3.5.2        -INF             .             7.0000          .          
+3.5.3        -INF             .             7.0000          .          
+3.5.4        -INF             .             7.0000          .          
+3.5.5        -INF             .             7.0000          .          
+3.5.6        -INF           -7.0000         7.0000          .          
+3.5.7        -INF           -1.0000         7.0000          .          
+3.6.1        -INF            1.0000         7.0000          .          
+3.6.2        -INF            7.0000         7.0000          .          
+3.6.3        -INF            7.0000         7.0000          .          
+3.6.4        -INF            7.0000         7.0000          .          
+3.6.5        -INF            7.0000         7.0000          .          
+3.6.6        -INF             .             7.0000          .          
+3.6.7        -INF            6.0000         7.0000          .          
+3.7.1        -INF            3.0000         7.0000          .          
+3.7.2        -INF            1.0000         7.0000          .          
+3.7.3        -INF            1.0000         7.0000          .          
+3.7.4        -INF            1.0000         7.0000          .          
+3.7.5        -INF            1.0000         7.0000          .          
+3.7.6        -INF           -6.0000         7.0000          .          
+3.7.7        -INF             .             7.0000          .          
+
+---- VAR X  Travel assignment
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+1.0.0          .              .              .             EPS         
+1.0.1          .              .             1.0000         EPS         
+1.0.2          .              .             1.0000         EPS         
+1.0.3          .              .             1.0000         EPS         
+1.0.4          .              .             1.0000         EPS         
+1.0.5          .             1.0000         1.0000         EPS         
+1.0.6          .              .             1.0000         EPS         
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:21:22 Page 16
+Madison TSP Model
+Solution Report     SOLVE mtz Using MIP From line 51
+
+
+     VAR X  Travel assignment
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+1.0.7          .              .             1.0000         EPS         
+1.1.0          .              .             1.0000         EPS         
+1.1.1          .              .              .             EPS         
+1.1.2          .              .             1.0000         EPS         
+1.1.3          .              .             1.0000         EPS         
+1.1.4          .              .             1.0000         EPS         
+1.1.5          .              .             1.0000         EPS         
+1.1.6          .              .             1.0000         EPS         
+1.1.7          .              .             1.0000         EPS         
+1.2.0          .             1.0000         1.0000         EPS         
+1.2.1          .              .             1.0000         EPS         
+1.2.2          .              .              .             EPS         
+1.2.3          .              .             1.0000         EPS         
+1.2.4          .              .             1.0000         EPS         
+1.2.5          .              .             1.0000         EPS         
+1.2.6          .              .             1.0000         EPS         
+1.2.7          .              .             1.0000         EPS         
+1.3.0          .              .             1.0000         EPS         
+1.3.1          .              .             1.0000         EPS         
+1.3.2          .             1.0000         1.0000         EPS         
+1.3.3          .              .              .             EPS         
+1.3.4          .              .             1.0000         EPS         
+1.3.5          .              .             1.0000         EPS         
+1.3.6          .              .             1.0000         EPS         
+1.3.7          .              .             1.0000         EPS         
+1.4.0          .              .             1.0000         EPS         
+1.4.1          .              .             1.0000         EPS         
+1.4.2          .              .             1.0000         EPS         
+1.4.3          .              .             1.0000         EPS         
+1.4.4          .              .              .             EPS         
+1.4.5          .              .             1.0000         EPS         
+1.4.6          .              .             1.0000         EPS         
+1.4.7          .              .             1.0000         EPS         
+1.5.0          .              .             1.0000         EPS         
+1.5.1          .              .             1.0000         EPS         
+1.5.2          .              .             1.0000         EPS         
+1.5.3          .             1.0000         1.0000         EPS         
+1.5.4          .              .             1.0000         EPS         
+1.5.5          .              .              .             EPS         
+1.5.6          .              .             1.0000         EPS         
+1.5.7          .              .             1.0000         EPS         
+1.6.0          .              .             1.0000         EPS         
+1.6.1          .              .             1.0000         EPS         
+1.6.2          .              .             1.0000         EPS         
+1.6.3          .              .             1.0000         EPS         
+1.6.4          .              .             1.0000         EPS         
+1.6.5          .              .             1.0000         EPS         
+1.6.6          .              .              .             EPS         
+1.6.7          .              .             1.0000         EPS         
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:21:22 Page 17
+Madison TSP Model
+Solution Report     SOLVE mtz Using MIP From line 51
+
+
+     VAR X  Travel assignment
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+1.7.0          .              .             1.0000         EPS         
+1.7.1          .              .             1.0000         EPS         
+1.7.2          .              .             1.0000         EPS         
+1.7.3          .              .             1.0000         EPS         
+1.7.4          .              .             1.0000         EPS         
+1.7.5          .              .             1.0000         EPS         
+1.7.6          .              .             1.0000         EPS         
+1.7.7          .              .              .             EPS         
+2.0.0          .              .              .             EPS         
+2.0.1          .              .             1.0000       254.5000      
+2.0.2          .              .             1.0000       404.8300      
+2.0.3          .              .             1.0000       669.2200      
+2.0.4          .             1.0000         1.0000       731.7700      
+2.0.5          .              .             1.0000       566.2400      
+2.0.6          .              .             1.0000       436.2300      
+2.0.7          .              .             1.0000       296.2800      
+2.1.0          .              .             1.0000       134.8900      
+2.1.1          .              .              .             EPS         
+2.1.2          .              .             1.0000       539.7200      
+2.1.3          .              .             1.0000       804.1000      
+2.1.4          .              .             1.0000       828.2300      
+2.1.5          .              .             1.0000       701.1300      
+2.1.6          .              .             1.0000       181.7300      
+2.1.7          .              .             1.0000       161.9500      
+2.2.0          .              .             1.0000       311.8100      
+2.2.1          .              .             1.0000       414.7500      
+2.2.2          .              .              .             EPS         
+2.2.3          .              .             1.0000       342.1400      
+2.2.4          .              .             1.0000       423.6800      
+2.2.5          .              .             1.0000       239.1600      
+2.2.6          .              .             1.0000       596.4800      
+2.2.7          .              .             1.0000       409.0100      
+2.3.0          .              .             1.0000       649.1200      
+2.3.1          .              .             1.0000       752.0600      
+2.3.2          .              .             1.0000       348.0100      
+2.3.3          .              .              .             EPS         
+2.3.4          .              .             1.0000        81.5300      
+2.3.5          .              .             1.0000       102.9800      
+2.3.6          .              .             1.0000       933.7900      
+2.3.7          .              .             1.0000       623.8400      
+2.4.0          .             1.0000         1.0000       730.6500      
+2.4.1          .              .             1.0000       833.6000      
+2.4.2          .              .             1.0000       429.5400      
+2.4.3          .              .             1.0000        81.5300      
+2.4.4          .              .              .             EPS         
+2.4.5          .              .             1.0000       184.5100      
+2.4.6          .              .             1.0000      1015.3200      
+2.4.7          .              .             1.0000       705.3800      
+2.5.0          .              .             1.0000       548.8500      
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:21:22 Page 18
+Madison TSP Model
+Solution Report     SOLVE mtz Using MIP From line 51
+
+
+     VAR X  Travel assignment
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+2.5.1          .              .             1.0000       651.7900      
+2.5.2          .              .             1.0000       246.6100      
+2.5.3          .              .             1.0000       102.9800      
+2.5.4          .              .             1.0000       184.5100      
+2.5.5          .              .              .             EPS         
+2.5.6          .              .             1.0000       833.5200      
+2.5.7          .              .             1.0000       523.5700      
+2.6.0          .              .             1.0000       316.6100      
+2.6.1          .              .             1.0000       181.7300      
+2.6.2          .              .             1.0000       721.4500      
+2.6.3          .              .             1.0000       985.8300      
+2.6.4          .              .             1.0000      1009.9600      
+2.6.5          .              .             1.0000       882.8500      
+2.6.6          .              .              .             EPS         
+2.6.7          .              .             1.0000       343.6700      
+2.7.0          .              .             1.0000       296.8300      
+2.7.1          .              .             1.0000       161.9500      
+2.7.2          .              .             1.0000       701.6700      
+2.7.3          .              .             1.0000       759.8900      
+2.7.4          .              .             1.0000       695.0600      
+2.7.5          .              .             1.0000       697.1700      
+2.7.6          .              .             1.0000       343.6700      
+2.7.7          .              .              .             EPS         
+3.0.0          .              .              .             EPS         
+3.0.1          .              .             1.0000         EPS         
+3.0.2          .              .             1.0000         EPS         
+3.0.3          .              .             1.0000         EPS         
+3.0.4          .              .             1.0000         EPS         
+3.0.5          .              .             1.0000         EPS         
+3.0.6          .              .             1.0000         EPS         
+3.0.7          .             1.0000         1.0000         EPS         
+3.1.0          .              .             1.0000         EPS         
+3.1.1          .              .              .             EPS         
+3.1.2          .              .             1.0000         EPS         
+3.1.3          .              .             1.0000         EPS         
+3.1.4          .              .             1.0000         EPS         
+3.1.5          .              .             1.0000         EPS         
+3.1.6          .             1.0000         1.0000         EPS         
+3.1.7          .              .             1.0000         EPS         
+3.2.0          .              .             1.0000         EPS         
+3.2.1          .              .             1.0000         EPS         
+3.2.2          .              .              .             EPS         
+3.2.3          .              .             1.0000         EPS         
+3.2.4          .              .             1.0000         EPS         
+3.2.5          .              .             1.0000         EPS         
+3.2.6          .              .             1.0000         EPS         
+3.2.7          .              .             1.0000         EPS         
+3.3.0          .              .             1.0000         EPS         
+3.3.1          .              .             1.0000         EPS         
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:21:22 Page 19
+Madison TSP Model
+Solution Report     SOLVE mtz Using MIP From line 51
+
+
+     VAR X  Travel assignment
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+3.3.2          .              .             1.0000         EPS         
+3.3.3          .              .              .             EPS         
+3.3.4          .              .             1.0000         EPS         
+3.3.5          .              .             1.0000         EPS         
+3.3.6          .              .             1.0000         EPS         
+3.3.7          .              .             1.0000         EPS         
+3.4.0          .              .             1.0000         EPS         
+3.4.1          .              .             1.0000         EPS         
+3.4.2          .              .             1.0000         EPS         
+3.4.3          .              .             1.0000         EPS         
+3.4.4          .              .              .             EPS         
+3.4.5          .              .             1.0000         EPS         
+3.4.6          .              .             1.0000         EPS         
+3.4.7          .              .             1.0000         EPS         
+3.5.0          .              .             1.0000         EPS         
+3.5.1          .              .             1.0000         EPS         
+3.5.2          .              .             1.0000         EPS         
+3.5.3          .              .             1.0000         EPS         
+3.5.4          .              .             1.0000         EPS         
+3.5.5          .              .              .             EPS         
+3.5.6          .              .             1.0000         EPS         
+3.5.7          .              .             1.0000         EPS         
+3.6.0          .             1.0000         1.0000         EPS         
+3.6.1          .              .             1.0000         EPS         
+3.6.2          .              .             1.0000         EPS         
+3.6.3          .              .             1.0000         EPS         
+3.6.4          .              .             1.0000         EPS         
+3.6.5          .              .             1.0000         EPS         
+3.6.6          .              .              .             EPS         
+3.6.7          .              .             1.0000         EPS         
+3.7.0          .              .             1.0000         EPS         
+3.7.1          .             1.0000         1.0000         EPS         
+3.7.2          .              .             1.0000         EPS         
+3.7.3          .              .             1.0000         EPS         
+3.7.4          .              .             1.0000         EPS         
+3.7.5          .              .             1.0000         EPS         
+3.7.6          .              .             1.0000         EPS         
+3.7.7          .              .              .             EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR OBJ               -INF         1462.4200        +INF             .          
+
+  OBJ  Objective function
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:21:22 Page 20
+Madison TSP Model
+Solution Report     SOLVE mtz Using MIP From line 51
+
+
+---- VAR U  Position of node in tour
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+1.0         1.0000         1.0000         8.0000         EPS         
+1.1         1.0000         1.0000         8.0000         EPS         
+1.2         1.0000         8.0000         8.0000         EPS         
+1.3         1.0000         7.0000         8.0000          .          
+1.4         1.0000         1.0000         8.0000         EPS         
+1.5         1.0000         2.0000         8.0000          .          
+1.6         1.0000         1.0000         8.0000         EPS         
+1.7         1.0000         1.0000         8.0000         EPS         
+2.0         1.0000         1.0000         8.0000         EPS         
+2.1         1.0000         1.0000         8.0000         EPS         
+2.2         1.0000         1.0000         8.0000         EPS         
+2.3         1.0000         1.0000         8.0000         EPS         
+2.4         1.0000         2.0000         8.0000          .          
+2.5         1.0000         1.0000         8.0000         EPS         
+2.6         1.0000         1.0000         8.0000         EPS         
+2.7         1.0000         1.0000         8.0000         EPS         
+3.0         1.0000         1.0000         8.0000         EPS         
+3.1         1.0000         7.0000         8.0000          .          
+3.2         1.0000         1.0000         8.0000         EPS         
+3.3         1.0000         1.0000         8.0000         EPS         
+3.4         1.0000         1.0000         8.0000         EPS         
+3.5         1.0000         1.0000         8.0000         EPS         
+3.6         1.0000         8.0000         8.0000         EPS         
+3.7         1.0000         2.0000         8.0000          .          
+
+---- VAR len_each  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1        -INF         1329.0400        +INF             .          
+2        -INF         1462.4200        +INF             .          
+3        -INF          956.5700        +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:21:22 Page 21
+Madison TSP Model
+E x e c u t i o n
+
+
+----     54 VARIABLE X.L  Travel assignment
+
+1.0.5 1
+1.2.0 1
+1.3.2 1
+1.5.3 1
+2.0.4 1
+2.4.0 1
+3.0.7 1
+3.1.6 1
+3.6.0 1
+3.7.1 1
+
+
+
+EXECUTION TIME       =        0.718 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
+
+
+USER: Course License UW-Madison Fall 2017            G170906/0001AS-GEN
+      Applied Optimization and Modeling CS/ECE/ISyE 524 - AAE 52DC13532
+      License for teaching and research at degree granting institutions
+
+
+**** FILE SUMMARY
+
+Input      D:\Learning\Graduate\isye524\project\submit\Model2\dictionary\MadisonTSP.gms
+Output     D:\Learning\Graduate\isye524\project\submit\Model2\dictionary\MadisonTSP.lst
