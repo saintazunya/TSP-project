@@ -1,0 +1,56 @@
+set     n       Pizza Targets /0*9/;
+
+$title  Madison TSP Model
+$if not set ds $set ds distance
+
+
+alias (i,j,n);
+*set ks(i)/0/;
+set m number of cars/1*10/;
+binary variable caras(m);
+caras.fx('1')=1;
+caras.fx('2')=1;
+table   c(i,j)  Travel distances
+$ondelim
+$include %ds%.csv
+$offdelim
+;
+
+binary variable        X(m,i,j)  Travel assignment;
+
+variable        OBJ     Objective function;
+scalar maxtime;
+maxtime=600;
+variable U(m,i) Position of node in tour;
+variable len_each(m),timec;
+equations       objdef, out, in,lendef,initc,initcend,consistdef,timedef,timeup,assignc;
+
+lendef(m)..        len_each(m) =e= sum((i,j),c(i,j)*X(m,i,j));
+
+out(i)$(ord(i)>1)..        sum((m,j),X(m,i,j)) =e= 1;
+
+in(j)$(ord(j)>1)..         sum((m,i),X(m,i,j)) =e= 1;
+initc(m)..         sum(j,X(m,'0',j)) =e= caras(m);
+initcend(m)..      sum(i,X(m,i,'0')) =e= caras(m);
+timedef(m)..        timec=g=len_each(m);
+timeup..            timec=l=maxtime;
+objdef..            obj=e=timec+sum(m,caras(m)*100);
+consistdef(m,i)..   sum(n,X(m,n,i)) =e= sum(n,X(m,i,n));
+assignc(m,i,j)..    X(m,i,j)=l=caras(m);
+*len_each.lo(m)=1;
+X.FX(m,i,i) = 0;
+equation subtour;
+subtour(m,i,j)$(ord(j)>1).. U(m,i) - U(m,j) + card(n) *X(m,i,j) =L= card(n) - 1;
+*U.LO(m,i) = 1;
+U.UP(m,i) = card(n);
+model mtz /all/;
+
+solve mtz using mip minimizing OBJ;
+
+option X:0:0:1;
+display X.L;
+parameter route;
+route(m,i,j)=x.l(m,i,j)$(x.l(m,i,j)>0) ;
+execute_unload 'Madison_pizza.gdx',route;
+execute 'gdxxrw.exe i=Madison_pizza.gdx o=route.xls par=route rdim=3' ;
+

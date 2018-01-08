@@ -1,0 +1,942 @@
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/05/17 09:09:29 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+   1  set     n       Pizza Targets /0*5/;
+   2   
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/05/17 09:09:29 Page 2
+Madison TSP Model
+C o m p i l a t i o n
+
+
+   5   
+   6   
+   7  alias (i,j,n);
+   8  set ks(i)/0/;
+   9  set m number of cars/1*3/;
+  10  binary variable caras(m);
+  11  table   c(i,j)  Travel distances
+INCLUDE    D:\Learning\Graduate\isye524\project\Madison2\distance.csv
+  14  ,0,1,2,3,4,5
+  15  0,0.00,808.24,362.37,1143.54,730.54,259.39
+  16  1,825.63,0.00,669.22,756.67,597.45,566.24
+  17  2,362.37,649.12,0.00,784.23,371.23,102.98
+  18  3,1120.50,831.29,908.67,0.00,709.51,861.10
+  19  4,561.52,717.32,199.15,559.60,0.00,302.13
+  20  5,259.39,548.85,102.98,887.21,474.21,0.00
+  22  ;
+  23   
+  24  binary variable        X(m,i,j)  Travel assignment;
+  25   
+  26  variable        OBJ     Objective function;
+  27  scalar maxtime;
+  28  maxtime=12000;
+  29  variable U(m,i) Position of node in tour;
+  30  variable len_each(m),timec;
+  31  equations       objdef, out, in,lendef,initc,initcend,consistdef,timedef,timeup;
+  32   
+  33  lendef(m)..        len_each(m) =e= caras(m)*sum((i,j),c(i,j)*X(m,i,j));
+  34   
+  35  out(i)$(ord(i)>1)..        sum((m,j),X(m,i,j)) =e= 1;
+  36   
+  37  in(j)$(ord(j)>1)..         sum((m,i),X(m,i,j)) =e= 1;
+  38  initc(m)..         sum(j,X(m,'0',j)) =e= 1*caras(m);
+  39  initcend(m)..      sum(i,X(m,i,'0')) =e= 1*caras(m);
+  40  timedef(m)..        timec=g=len_each(m);
+  41  objdef..            obj=e=sum(m,len_each(m));
+  42  consistdef(m,i)..        sum(n,X(m,n,i)) =e= sum(n,X(m,i,n));
+  43  timeup..            timec=l=maxtime;
+  44  X.FX(m,i,i) = 0;
+  45   
+  46   
+  47  equation subtour;
+  48  subtour(m,i,j)$(ord(j)>1).. U(m,i) - U(m,j) + card(n) *X(m,i,j) =L= card(n) - 1;
+  49  U.LO(m,i) = 1;
+  50  U.UP(m,i) = card(n);
+  51  model mtz /all/;
+  52   
+  53  solve mtz using minlp minimizing OBJ;
+  54   
+  55  option X:0:0:1;
+  56  display X.L;
+  57  parameter route;
+  58  route(m,i,j)=x.l(m,i,j)$(x.l(m,i,j)>0) ;
+  59  execute_unload 'Madison_pizza.gdx',route;
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/05/17 09:09:29 Page 3
+Madison TSP Model
+C o m p i l a t i o n
+
+
+  60  execute 'gdxxrw.exe i=Madison_pizza.gdx o=route.xls par=route rdim=3' ;
+  61   
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/05/17 09:09:29 Page 4
+Madison TSP Model
+Include File Summary
+
+
+   SEQ   GLOBAL TYPE      PARENT   LOCAL  FILENAME
+
+     1        1 INPUT          0       0  D:\Learning\Graduate\isye524\project\Madison2\MadisonTsp2.gms
+     2       13 INCLUDE        1      13  .D:\Learning\Graduate\isye524\project\Madison2\distance.csv
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/05/17 09:09:29 Page 5
+Madison TSP Model
+Equation Listing    SOLVE mtz Using MINLP From line 53
+
+
+---- objdef  =E=  
+
+objdef..  OBJ - len_each(1) - len_each(2) - len_each(3) =E= 0 ; (LHS = 0)
+     
+
+---- out  =E=  
+
+out(1)..  X(1,1,0) + X(1,1,1) + X(1,1,2) + X(1,1,3) + X(1,1,4) + X(1,1,5) + X(2,1,0) + X(2,1,1) + X(2,1,2) + X(2,1,3) + X(2,1,4) + X(2,1,5) + X(3,1,0) + X(3,1,1) + X(3,1,2) + X(3,1,3) + X(3,1,4) + X(3,1,5) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+out(2)..  X(1,2,0) + X(1,2,1) + X(1,2,2) + X(1,2,3) + X(1,2,4) + X(1,2,5) + X(2,2,0) + X(2,2,1) + X(2,2,2) + X(2,2,3) + X(2,2,4) + X(2,2,5) + X(3,2,0) + X(3,2,1) + X(3,2,2) + X(3,2,3) + X(3,2,4) + X(3,2,5) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+out(3)..  X(1,3,0) + X(1,3,1) + X(1,3,2) + X(1,3,3) + X(1,3,4) + X(1,3,5) + X(2,3,0) + X(2,3,1) + X(2,3,2) + X(2,3,3) + X(2,3,4) + X(2,3,5) + X(3,3,0) + X(3,3,1) + X(3,3,2) + X(3,3,3) + X(3,3,4) + X(3,3,5) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 2 ENTRIES SKIPPED
+
+
+---- in  =E=  
+
+in(1)..  X(1,0,1) + X(1,1,1) + X(1,2,1) + X(1,3,1) + X(1,4,1) + X(1,5,1) + X(2,0,1) + X(2,1,1) + X(2,2,1) + X(2,3,1) + X(2,4,1) + X(2,5,1) + X(3,0,1) + X(3,1,1) + X(3,2,1) + X(3,3,1) + X(3,4,1) + X(3,5,1) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+in(2)..  X(1,0,2) + X(1,1,2) + X(1,2,2) + X(1,3,2) + X(1,4,2) + X(1,5,2) + X(2,0,2) + X(2,1,2) + X(2,2,2) + X(2,3,2) + X(2,4,2) + X(2,5,2) + X(3,0,2) + X(3,1,2) + X(3,2,2) + X(3,3,2) + X(3,4,2) + X(3,5,2) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+in(3)..  X(1,0,3) + X(1,1,3) + X(1,2,3) + X(1,3,3) + X(1,4,3) + X(1,5,3) + X(2,0,3) + X(2,1,3) + X(2,2,3) + X(2,3,3) + X(2,4,3) + X(2,5,3) + X(3,0,3) + X(3,1,3) + X(3,2,3) + X(3,3,3) + X(3,4,3) + X(3,5,3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 2 ENTRIES SKIPPED
+
+
+---- lendef  =E=  
+
+lendef(1)..  (0)*caras(1) + (0)*X(1,0,1) + (0)*X(1,0,2) + (0)*X(1,0,3) + (0)*X(1,0,4) + (0)*X(1,0,5) + (0)*X(1,1,0) + (0)*X(1,1,2) + (0)*X(1,1,3) + (0)*X(1,1,4) + (0)*X(1,1,5) + (0)*X(1,2,0) + (0)*X(1,2,1) + (0)*X(1,2,3) + (0)*X(1,2,4) + (0)*X(1,2,5)
+     
+      + (0)*X(1,3,0) + (0)*X(1,3,1) + (0)*X(1,3,2) + (0)*X(1,3,4) + (0)*X(1,3,5) + (0)*X(1,4,0) + (0)*X(1,4,1) + (0)*X(1,4,2) + (0)*X(1,4,3) + (0)*X(1,4,5) + (0)*X(1,5,0) + (0)*X(1,5,1) + (0)*X(1,5,2) + (0)*X(1,5,3) + (0)*X(1,5,4) + len_each(1) =E= 0 ;
+     
+      (LHS = 0)
+     
+lendef(2)..  (0)*caras(2) + (0)*X(2,0,1) + (0)*X(2,0,2) + (0)*X(2,0,3) + (0)*X(2,0,4) + (0)*X(2,0,5) + (0)*X(2,1,0) + (0)*X(2,1,2) + (0)*X(2,1,3) + (0)*X(2,1,4) + (0)*X(2,1,5) + (0)*X(2,2,0) + (0)*X(2,2,1) + (0)*X(2,2,3) + (0)*X(2,2,4) + (0)*X(2,2,5)
+     
+      + (0)*X(2,3,0) + (0)*X(2,3,1) + (0)*X(2,3,2) + (0)*X(2,3,4) + (0)*X(2,3,5) + (0)*X(2,4,0) + (0)*X(2,4,1) + (0)*X(2,4,2) + (0)*X(2,4,3) + (0)*X(2,4,5) + (0)*X(2,5,0) + (0)*X(2,5,1) + (0)*X(2,5,2) + (0)*X(2,5,3) + (0)*X(2,5,4) + len_each(2) =E= 0 ;
+     
+      (LHS = 0)
+     
+lendef(3)..  (0)*caras(3) + (0)*X(3,0,1) + (0)*X(3,0,2) + (0)*X(3,0,3) + (0)*X(3,0,4) + (0)*X(3,0,5) + (0)*X(3,1,0) + (0)*X(3,1,2) + (0)*X(3,1,3) + (0)*X(3,1,4) + (0)*X(3,1,5) + (0)*X(3,2,0) + (0)*X(3,2,1) + (0)*X(3,2,3) + (0)*X(3,2,4) + (0)*X(3,2,5)
+     
+      + (0)*X(3,3,0) + (0)*X(3,3,1) + (0)*X(3,3,2) + (0)*X(3,3,4) + (0)*X(3,3,5) + (0)*X(3,4,0) + (0)*X(3,4,1) + (0)*X(3,4,2) + (0)*X(3,4,3) + (0)*X(3,4,5) + (0)*X(3,5,0) + (0)*X(3,5,1) + (0)*X(3,5,2) + (0)*X(3,5,3) + (0)*X(3,5,4) + len_each(3) =E= 0 ;
+     
+      (LHS = 0)
+     
+
+---- initc  =E=  
+
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/05/17 09:09:29 Page 6
+Madison TSP Model
+Equation Listing    SOLVE mtz Using MINLP From line 53
+
+
+     initc  =E=  
+
+initc(1)..  - caras(1) + X(1,0,0) + X(1,0,1) + X(1,0,2) + X(1,0,3) + X(1,0,4) + X(1,0,5) =E= 0 ; (LHS = 0)
+     
+initc(2)..  - caras(2) + X(2,0,0) + X(2,0,1) + X(2,0,2) + X(2,0,3) + X(2,0,4) + X(2,0,5) =E= 0 ; (LHS = 0)
+     
+initc(3)..  - caras(3) + X(3,0,0) + X(3,0,1) + X(3,0,2) + X(3,0,3) + X(3,0,4) + X(3,0,5) =E= 0 ; (LHS = 0)
+     
+
+---- initcend  =E=  
+
+initcend(1)..  - caras(1) + X(1,0,0) + X(1,1,0) + X(1,2,0) + X(1,3,0) + X(1,4,0) + X(1,5,0) =E= 0 ; (LHS = 0)
+     
+initcend(2)..  - caras(2) + X(2,0,0) + X(2,1,0) + X(2,2,0) + X(2,3,0) + X(2,4,0) + X(2,5,0) =E= 0 ; (LHS = 0)
+     
+initcend(3)..  - caras(3) + X(3,0,0) + X(3,1,0) + X(3,2,0) + X(3,3,0) + X(3,4,0) + X(3,5,0) =E= 0 ; (LHS = 0)
+     
+
+---- consistdef  =E=  
+
+consistdef(1,0)..  - X(1,0,1) - X(1,0,2) - X(1,0,3) - X(1,0,4) - X(1,0,5) + X(1,1,0) + X(1,2,0) + X(1,3,0) + X(1,4,0) + X(1,5,0) =E= 0 ; (LHS = 0)
+     
+consistdef(1,1)..  X(1,0,1) - X(1,1,0) - X(1,1,2) - X(1,1,3) - X(1,1,4) - X(1,1,5) + X(1,2,1) + X(1,3,1) + X(1,4,1) + X(1,5,1) =E= 0 ; (LHS = 0)
+     
+consistdef(1,2)..  X(1,0,2) + X(1,1,2) - X(1,2,0) - X(1,2,1) - X(1,2,3) - X(1,2,4) - X(1,2,5) + X(1,3,2) + X(1,4,2) + X(1,5,2) =E= 0 ; (LHS = 0)
+     
+REMAINING 15 ENTRIES SKIPPED
+
+
+---- timedef  =G=  
+
+timedef(1)..  - len_each(1) + timec =G= 0 ; (LHS = 0)
+     
+timedef(2)..  - len_each(2) + timec =G= 0 ; (LHS = 0)
+     
+timedef(3)..  - len_each(3) + timec =G= 0 ; (LHS = 0)
+     
+
+---- timeup  =L=  
+
+timeup..  timec =L= 12000 ; (LHS = 0)
+     
+
+---- subtour  =L=  
+
+subtour(1,0,1)..  6*X(1,0,1) + U(1,0) - U(1,1) =L= 5 ; (LHS = 0)
+     
+subtour(1,0,2)..  6*X(1,0,2) + U(1,0) - U(1,2) =L= 5 ; (LHS = 0)
+     
+subtour(1,0,3)..  6*X(1,0,3) + U(1,0) - U(1,3) =L= 5 ; (LHS = 0)
+     
+REMAINING 87 ENTRIES SKIPPED
+
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/05/17 09:09:29 Page 7
+Madison TSP Model
+Column Listing      SOLVE mtz Using MINLP From line 53
+
+
+---- caras  
+
+caras(1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       (0)      lendef(1)
+       -1       initc(1)
+       -1       initcend(1)
+
+caras(2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       (0)      lendef(2)
+       -1       initc(2)
+       -1       initcend(2)
+
+caras(3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       (0)      lendef(3)
+       -1       initc(3)
+       -1       initcend(3)
+
+
+---- X  Travel assignment
+
+X(1,0,0)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+        1       initc(1)
+        1       initcend(1)
+
+X(1,0,1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       in(1)
+       (0)      lendef(1)
+        1       initc(1)
+       -1       consistdef(1,0)
+        1       consistdef(1,1)
+        6       subtour(1,0,1)
+
+X(1,0,2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       in(2)
+       (0)      lendef(1)
+        1       initc(1)
+       -1       consistdef(1,0)
+        1       consistdef(1,2)
+        6       subtour(1,0,2)
+
+REMAINING 105 ENTRIES SKIPPED
+
+---- OBJ  Objective function
+
+OBJ
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       objdef
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/05/17 09:09:29 Page 8
+Madison TSP Model
+Column Listing      SOLVE mtz Using MINLP From line 53
+
+
+     OBJ  Objective function
+
+
+
+---- U  Position of node in tour
+
+U(1,0)
+                (.LO, .L, .UP, .M = 1, 1, 6, 0)
+        1       subtour(1,0,1)
+        1       subtour(1,0,2)
+        1       subtour(1,0,3)
+        1       subtour(1,0,4)
+        1       subtour(1,0,5)
+        0       (OLD LEVEL ****)
+
+U(1,1)
+                (.LO, .L, .UP, .M = 1, 1, 6, 0)
+       -1       subtour(1,0,1)
+        1       subtour(1,1,2)
+        1       subtour(1,1,3)
+        1       subtour(1,1,4)
+        1       subtour(1,1,5)
+       -1       subtour(1,2,1)
+       -1       subtour(1,3,1)
+       -1       subtour(1,4,1)
+       -1       subtour(1,5,1)
+        0       (OLD LEVEL ****)
+
+U(1,2)
+                (.LO, .L, .UP, .M = 1, 1, 6, 0)
+       -1       subtour(1,0,2)
+       -1       subtour(1,1,2)
+        1       subtour(1,2,1)
+        1       subtour(1,2,3)
+        1       subtour(1,2,4)
+        1       subtour(1,2,5)
+       -1       subtour(1,3,2)
+       -1       subtour(1,4,2)
+       -1       subtour(1,5,2)
+        0       (OLD LEVEL ****)
+
+REMAINING 15 ENTRIES SKIPPED
+
+---- len_each  
+
+len_each(1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       objdef
+        1       lendef(1)
+       -1       timedef(1)
+
+len_each(2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/05/17 09:09:29 Page 9
+Madison TSP Model
+Column Listing      SOLVE mtz Using MINLP From line 53
+
+
+     len_each  
+
+       -1       objdef
+        1       lendef(2)
+       -1       timedef(2)
+
+len_each(3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       objdef
+        1       lendef(3)
+       -1       timedef(3)
+
+
+---- timec  
+
+timec
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       timedef(1)
+        1       timedef(2)
+        1       timedef(3)
+        1       timeup
+
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/05/17 09:09:29 Page 10
+Madison TSP Model
+Model Statistics    SOLVE mtz Using MINLP From line 53
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS          10     SINGLE EQUATIONS          132
+BLOCKS OF VARIABLES           6     SINGLE VARIABLES          134  18 projected
+NON ZERO ELEMENTS           749     NON LINEAR N-Z             93
+DERIVATIVE POOL              20     CONSTANT POOL              43
+CODE LENGTH                 195     DISCRETE VARIABLES         93
+
+
+GENERATION TIME      =        0.125 SECONDS      4 MB  24.9.1 r63795 WEX-WEI
+
+
+EXECUTION TIME       =        0.125 SECONDS      4 MB  24.9.1 r63795 WEX-WEI
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/05/17 09:09:29 Page 11
+Madison TSP Model
+Solution Report     SOLVE mtz Using MINLP From line 53
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   mtz                 OBJECTIVE  OBJ
+     TYPE    MINLP               DIRECTION  MINIMIZE
+     SOLVER  DICOPT              FROM LINE  53
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      8 Integer Solution          
+**** OBJECTIVE VALUE             3153.0200
+
+ RESOURCE USAGE, LIMIT          0.391      1000.000
+ ITERATION COUNT, LIMIT      2726    2000000000
+ EVALUATION ERRORS              0             0
+
+ ------------------------------------------------------------------
+Dicopt 2         24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
+ ------------------------------------------------------------------
+     Aldo Vecchietti and Ignacio E. Grossmann                      
+     Engineering Design Research Center                            
+     Carnegie Mellon University                                    
+     Pittsburgh, Pennsylvania 15213                                
+ ------------------------------------------------------------------
+CONOPT 3         24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
+ 
+ 
+    C O N O P T 3   version 3.17E
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+    The model has 134 variables and 132 constraints
+    with 749 Jacobian elements, 93 of which are nonlinear.
+    The Hessian of the Lagrangian has 0 elements on the diagonal,
+    90 elements below the diagonal, and 93 nonlinear variables.
+ 
+                   Pre-triangular equations:   15
+                   Post-triangular equations:  1
+                   Definitional equations:     3
+ 
+ 
+ ** Optimal solution. Reduced gradient less than tolerance.
+ 
+ 
+ CONOPT time Total                            0.026 seconds
+   of which: Function evaluations             0.000 =  0.0%
+             1st Derivative evaluations       0.000 =  0.0%
+ 
+
+IBM ILOG CPLEX   24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
+--- GAMS/Cplex licensed for continuous and discrete problems.
+Cplex 12.7.1.0
+
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/05/17 09:09:29 Page 12
+Madison TSP Model
+Solution Report     SOLVE mtz Using MINLP From line 53
+
+
+Unable to load names.
+MIP status(101): integer optimal solution
+Cplex Time: 0.09sec (det. 12.09 ticks)
+Fixing integer variables, and solving final LP...
+Fixed MIP status(1): optimal
+Cplex Time: 0.02sec (det. 0.11 ticks)
+Proven optimal solution.
+
+MIP Solution:          121.772573    (324 iterations, 47 nodes)
+Final Solve:           121.772573    (0 iterations)
+
+Best possible:         121.772573
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- DICOPT: Setting up next NLP
+CONOPT 3         24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
+ 
+ 
+    C O N O P T 3   version 3.17E
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+                   Pre-triangular equations:   53
+                   Post-triangular equations:  70
+ 
+ 
+ ** Optimal solution. There are no superbasic variables.
+ 
+ 
+ CONOPT time Total                            0.017 seconds
+   of which: Function evaluations             0.000 =  0.0%
+             1st Derivative evaluations       0.000 =  0.0%
+ 
+--- GMO Resort Time 0ms
+
+IBM ILOG CPLEX   24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
+--- GAMS/Cplex licensed for continuous and discrete problems.
+Cplex 12.7.1.0
+
+Unable to load names.
+MIP status(101): integer optimal solution
+Cplex Time: 0.20sec (det. 56.39 ticks)
+Fixing integer variables, and solving final LP...
+Fixed MIP status(1): optimal
+Cplex Time: 0.00sec (det. 0.13 ticks)
+Proven optimal solution.
+
+MIP Solution:         1013.741551    (2384 iterations, 489 nodes)
+Final Solve:          1013.741551    (3 iterations)
+
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/05/17 09:09:29 Page 13
+Madison TSP Model
+Solution Report     SOLVE mtz Using MINLP From line 53
+
+
+Best possible:        1013.741551
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- DICOPT: Setting up next NLP
+CONOPT 3         24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
+ 
+ 
+    C O N O P T 3   version 3.17E
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+                   Pre-triangular equations:   53
+                   Post-triangular equations:  70
+ 
+ 
+ ** Optimal solution. There are no superbasic variables.
+ 
+ 
+ CONOPT time Total                            0.002 seconds
+   of which: Function evaluations             0.000 =  0.0%
+             1st Derivative evaluations       0.000 =  0.0%
+ 
+--- DICOPT: Stopped on NLP worsening
+
+      The search was stopped because the objective function
+      of the NLP subproblems started to deteriorate.
+
+--- DICOPT: Best integer solution found: 3153.020000
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU objdef              .              .              .             1.0000      
+
+---- EQU out  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1         1.0000         1.0000         1.0000          .          
+2         1.0000         1.0000         1.0000          .          
+3         1.0000         1.0000         1.0000          .          
+4         1.0000         1.0000         1.0000          .          
+5         1.0000         1.0000         1.0000          .          
+
+---- EQU in  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1         1.0000         1.0000         1.0000          .          
+2         1.0000         1.0000         1.0000          .          
+3         1.0000         1.0000         1.0000          .          
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/05/17 09:09:29 Page 14
+Madison TSP Model
+Solution Report     SOLVE mtz Using MINLP From line 53
+
+
+     EQU in  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+4         1.0000         1.0000         1.0000          .          
+5         1.0000         1.0000         1.0000          .          
+
+---- EQU lendef  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1          .              .              .             1.0000      
+2          .              .              .             1.0000      
+3          .              .              .             1.0000      
+
+---- EQU initc  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1          .              .              .              .          
+2          .              .              .              .          
+3          .              .              .              .          
+
+---- EQU initcend  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1          .              .              .              .          
+2          .              .              .              .          
+3          .              .              .              .          
+
+---- EQU consistdef  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+1.0          .              .              .              .          
+1.1          .              .              .              .          
+1.2          .              .              .              .          
+1.3          .              .              .              .          
+1.4          .              .              .              .          
+1.5          .              .              .              .          
+2.0          .              .              .              .          
+2.1          .              .              .              .          
+2.2          .              .              .              .          
+2.3          .              .              .              .          
+2.4          .              .              .              .          
+2.5          .              .              .              .          
+3.0          .              .              .              .          
+3.1          .              .              .              .          
+3.2          .              .              .              .          
+3.3          .              .              .              .          
+3.4          .              .              .              .          
+3.5          .              .              .              .          
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/05/17 09:09:29 Page 15
+Madison TSP Model
+Solution Report     SOLVE mtz Using MINLP From line 53
+
+
+---- EQU timedef  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1          .         12000.0000        +INF             .          
+2          .         12000.0000        +INF             .          
+3          .          8846.9800        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU timeup            -INF        12000.0000     12000.0000         EPS         
+
+---- EQU subtour  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+1.0.1        -INF             .             5.0000          .          
+1.0.2        -INF             .             5.0000          .          
+1.0.3        -INF             .             5.0000          .          
+1.0.4        -INF             .             5.0000          .          
+1.0.5        -INF             .             5.0000          .          
+1.1.1        -INF             .             5.0000          .          
+1.1.2        -INF             .             5.0000          .          
+1.1.3        -INF             .             5.0000          .          
+1.1.4        -INF             .             5.0000          .          
+1.1.5        -INF             .             5.0000          .          
+1.2.1        -INF             .             5.0000          .          
+1.2.2        -INF             .             5.0000          .          
+1.2.3        -INF             .             5.0000          .          
+1.2.4        -INF             .             5.0000          .          
+1.2.5        -INF             .             5.0000          .          
+1.3.1        -INF             .             5.0000          .          
+1.3.2        -INF             .             5.0000          .          
+1.3.3        -INF             .             5.0000          .          
+1.3.4        -INF             .             5.0000          .          
+1.3.5        -INF             .             5.0000          .          
+1.4.1        -INF             .             5.0000          .          
+1.4.2        -INF             .             5.0000          .          
+1.4.3        -INF             .             5.0000          .          
+1.4.4        -INF             .             5.0000          .          
+1.4.5        -INF             .             5.0000          .          
+1.5.1        -INF             .             5.0000          .          
+1.5.2        -INF             .             5.0000          .          
+1.5.3        -INF             .             5.0000          .          
+1.5.4        -INF             .             5.0000          .          
+1.5.5        -INF             .             5.0000          .          
+2.0.1        -INF             .             5.0000          .          
+2.0.2        -INF             .             5.0000          .          
+2.0.3        -INF             .             5.0000          .          
+2.0.4        -INF             .             5.0000          .          
+2.0.5        -INF             .             5.0000          .          
+2.1.1        -INF             .             5.0000          .          
+2.1.2        -INF             .             5.0000          .          
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/05/17 09:09:29 Page 16
+Madison TSP Model
+Solution Report     SOLVE mtz Using MINLP From line 53
+
+
+     EQU subtour  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+2.1.3        -INF             .             5.0000          .          
+2.1.4        -INF             .             5.0000          .          
+2.1.5        -INF             .             5.0000          .          
+2.2.1        -INF             .             5.0000          .          
+2.2.2        -INF             .             5.0000          .          
+2.2.3        -INF             .             5.0000          .          
+2.2.4        -INF             .             5.0000          .          
+2.2.5        -INF             .             5.0000          .          
+2.3.1        -INF             .             5.0000          .          
+2.3.2        -INF             .             5.0000          .          
+2.3.3        -INF             .             5.0000          .          
+2.3.4        -INF             .             5.0000          .          
+2.3.5        -INF             .             5.0000          .          
+2.4.1        -INF             .             5.0000          .          
+2.4.2        -INF             .             5.0000          .          
+2.4.3        -INF             .             5.0000          .          
+2.4.4        -INF             .             5.0000          .          
+2.4.5        -INF             .             5.0000          .          
+2.5.1        -INF             .             5.0000          .          
+2.5.2        -INF             .             5.0000          .          
+2.5.3        -INF             .             5.0000          .          
+2.5.4        -INF             .             5.0000          .          
+2.5.5        -INF             .             5.0000          .          
+3.0.1        -INF           -3.0000         5.0000          .          
+3.0.2        -INF           -5.0000         5.0000          .          
+3.0.3        -INF           -2.0000         5.0000          .          
+3.0.4        -INF            5.0000         5.0000         EPS         
+3.0.5        -INF           -4.0000         5.0000          .          
+3.1.1        -INF             .             5.0000          .          
+3.1.2        -INF           -2.0000         5.0000          .          
+3.1.3        -INF            1.0000         5.0000          .          
+3.1.4        -INF            2.0000         5.0000          .          
+3.1.5        -INF            5.0000         5.0000         EPS         
+3.2.1        -INF            2.0000         5.0000          .          
+3.2.2        -INF             .             5.0000          .          
+3.2.3        -INF            3.0000         5.0000          .          
+3.2.4        -INF            4.0000         5.0000          .          
+3.2.5        -INF            1.0000         5.0000          .          
+3.3.1        -INF            5.0000         5.0000         EPS         
+3.3.2        -INF           -3.0000         5.0000          .          
+3.3.3        -INF             .             5.0000          .          
+3.3.4        -INF            1.0000         5.0000          .          
+3.3.5        -INF           -2.0000         5.0000          .          
+3.4.1        -INF           -2.0000         5.0000          .          
+3.4.2        -INF           -4.0000         5.0000          .          
+3.4.3        -INF            5.0000         5.0000         EPS         
+3.4.4        -INF             .             5.0000          .          
+3.4.5        -INF           -3.0000         5.0000          .          
+3.5.1        -INF            1.0000         5.0000          .          
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/05/17 09:09:29 Page 17
+Madison TSP Model
+Solution Report     SOLVE mtz Using MINLP From line 53
+
+
+     EQU subtour  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+3.5.2        -INF            5.0000         5.0000         EPS         
+3.5.3        -INF            2.0000         5.0000          .          
+3.5.4        -INF            3.0000         5.0000          .          
+3.5.5        -INF             .             5.0000          .          
+
+---- VAR caras  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1          .              .             1.0000         EPS         
+2          .              .             1.0000         EPS         
+3          .             1.0000         1.0000      3153.0200      
+
+---- VAR X  Travel assignment
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+1.0.0          .              .              .             EPS         
+1.0.1          .              .             1.0000         EPS         
+1.0.2          .              .             1.0000         EPS         
+1.0.3          .              .             1.0000         EPS         
+1.0.4          .              .             1.0000         EPS         
+1.0.5          .              .             1.0000         EPS         
+1.1.0          .              .             1.0000         EPS         
+1.1.1          .              .              .             EPS         
+1.1.2          .              .             1.0000         EPS         
+1.1.3          .              .             1.0000         EPS         
+1.1.4          .              .             1.0000         EPS         
+1.1.5          .              .             1.0000         EPS         
+1.2.0          .              .             1.0000         EPS         
+1.2.1          .              .             1.0000         EPS         
+1.2.2          .              .              .             EPS         
+1.2.3          .              .             1.0000         EPS         
+1.2.4          .              .             1.0000         EPS         
+1.2.5          .              .             1.0000         EPS         
+1.3.0          .              .             1.0000         EPS         
+1.3.1          .              .             1.0000         EPS         
+1.3.2          .              .             1.0000         EPS         
+1.3.3          .              .              .             EPS         
+1.3.4          .              .             1.0000         EPS         
+1.3.5          .              .             1.0000         EPS         
+1.4.0          .              .             1.0000         EPS         
+1.4.1          .              .             1.0000         EPS         
+1.4.2          .              .             1.0000         EPS         
+1.4.3          .              .             1.0000         EPS         
+1.4.4          .              .              .             EPS         
+1.4.5          .              .             1.0000         EPS         
+1.5.0          .              .             1.0000         EPS         
+1.5.1          .              .             1.0000         EPS         
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/05/17 09:09:29 Page 18
+Madison TSP Model
+Solution Report     SOLVE mtz Using MINLP From line 53
+
+
+     VAR X  Travel assignment
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+1.5.2          .              .             1.0000         EPS         
+1.5.3          .              .             1.0000         EPS         
+1.5.4          .              .             1.0000         EPS         
+1.5.5          .              .              .             EPS         
+2.0.0          .              .              .             EPS         
+2.0.1          .              .             1.0000         EPS         
+2.0.2          .              .             1.0000         EPS         
+2.0.3          .              .             1.0000         EPS         
+2.0.4          .              .             1.0000         EPS         
+2.0.5          .              .             1.0000         EPS         
+2.1.0          .              .             1.0000         EPS         
+2.1.1          .              .              .             EPS         
+2.1.2          .              .             1.0000         EPS         
+2.1.3          .              .             1.0000         EPS         
+2.1.4          .              .             1.0000         EPS         
+2.1.5          .              .             1.0000         EPS         
+2.2.0          .              .             1.0000         EPS         
+2.2.1          .              .             1.0000         EPS         
+2.2.2          .              .              .             EPS         
+2.2.3          .              .             1.0000         EPS         
+2.2.4          .              .             1.0000         EPS         
+2.2.5          .              .             1.0000         EPS         
+2.3.0          .              .             1.0000         EPS         
+2.3.1          .              .             1.0000         EPS         
+2.3.2          .              .             1.0000         EPS         
+2.3.3          .              .              .             EPS         
+2.3.4          .              .             1.0000         EPS         
+2.3.5          .              .             1.0000         EPS         
+2.4.0          .              .             1.0000         EPS         
+2.4.1          .              .             1.0000         EPS         
+2.4.2          .              .             1.0000         EPS         
+2.4.3          .              .             1.0000         EPS         
+2.4.4          .              .              .             EPS         
+2.4.5          .              .             1.0000         EPS         
+2.5.0          .              .             1.0000         EPS         
+2.5.1          .              .             1.0000         EPS         
+2.5.2          .              .             1.0000         EPS         
+2.5.3          .              .             1.0000         EPS         
+2.5.4          .              .             1.0000         EPS         
+2.5.5          .              .              .             EPS         
+3.0.0          .              .              .             EPS         
+3.0.1          .              .             1.0000       808.2400      
+3.0.2          .              .             1.0000       362.3700      
+3.0.3          .              .             1.0000      1143.5400      
+3.0.4          .             1.0000         1.0000       730.5400      
+3.0.5          .              .             1.0000       259.3900      
+3.1.0          .              .             1.0000       825.6300      
+3.1.1          .              .              .             EPS         
+3.1.2          .              .             1.0000       669.2200      
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/05/17 09:09:29 Page 19
+Madison TSP Model
+Solution Report     SOLVE mtz Using MINLP From line 53
+
+
+     VAR X  Travel assignment
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+3.1.3          .              .             1.0000       756.6700      
+3.1.4          .              .             1.0000       597.4500      
+3.1.5          .             1.0000         1.0000       566.2400      
+3.2.0          .             1.0000         1.0000       362.3700      
+3.2.1          .              .             1.0000       649.1200      
+3.2.2          .              .              .             EPS         
+3.2.3          .              .             1.0000       784.2300      
+3.2.4          .              .             1.0000       371.2300      
+3.2.5          .              .             1.0000       102.9800      
+3.3.0          .              .             1.0000      1120.5000      
+3.3.1          .             1.0000         1.0000       831.2900      
+3.3.2          .              .             1.0000       908.6700      
+3.3.3          .              .              .             EPS         
+3.3.4          .              .             1.0000       709.5100      
+3.3.5          .              .             1.0000       861.1000      
+3.4.0          .              .             1.0000       561.5200      
+3.4.1          .              .             1.0000       717.3200      
+3.4.2          .              .             1.0000       199.1500      
+3.4.3          .             1.0000         1.0000       559.6000      
+3.4.4          .              .              .             EPS         
+3.4.5          .              .             1.0000       302.1300      
+3.5.0          .              .             1.0000       259.3900      
+3.5.1          .              .             1.0000       548.8500      
+3.5.2          .             1.0000         1.0000       102.9800      
+3.5.3          .              .             1.0000       887.2100      
+3.5.4          .              .             1.0000       474.2100      
+3.5.5          .              .              .             EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR OBJ               -INF         3153.0200        +INF             .          
+
+  OBJ  Objective function
+
+---- VAR U  Position of node in tour
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+1.0         1.0000         1.0000         6.0000         EPS         
+1.1         1.0000         1.0000         6.0000         EPS         
+1.2         1.0000         1.0000         6.0000         EPS         
+1.3         1.0000         1.0000         6.0000         EPS         
+1.4         1.0000         1.0000         6.0000         EPS         
+1.5         1.0000         1.0000         6.0000         EPS         
+2.0         1.0000         1.0000         6.0000         EPS         
+2.1         1.0000         1.0000         6.0000         EPS         
+2.2         1.0000         1.0000         6.0000         EPS         
+2.3         1.0000         1.0000         6.0000         EPS         
+2.4         1.0000         1.0000         6.0000         EPS         
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/05/17 09:09:29 Page 20
+Madison TSP Model
+Solution Report     SOLVE mtz Using MINLP From line 53
+
+
+     VAR U  Position of node in tour
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+2.5         1.0000         1.0000         6.0000         EPS         
+3.0         1.0000         1.0000         6.0000         EPS         
+3.1         1.0000         4.0000         6.0000          .          
+3.2         1.0000         6.0000         6.0000          .          
+3.3         1.0000         3.0000         6.0000          .          
+3.4         1.0000         2.0000         6.0000          .          
+3.5         1.0000         5.0000         6.0000          .          
+
+---- VAR len_each  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1        -INF             .            +INF             .          
+2        -INF             .            +INF             .          
+3        -INF         3153.0200        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR timec             -INF        12000.0000        +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/05/17 09:09:29 Page 21
+Madison TSP Model
+E x e c u t i o n
+
+
+----     56 VARIABLE X.L  Travel assignment
+
+3.0.4 1
+3.1.5 1
+3.2.0 1
+3.3.1 1
+3.4.3 1
+3.5.2 1
+
+
+
+EXECUTION TIME       =        0.812 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
+
+
+USER: Course License UW-Madison Fall 2017            G170906/0001AS-GEN
+      Applied Optimization and Modeling CS/ECE/ISyE 524 - AAE 52DC13532
+      License for teaching and research at degree granting institutions
+
+
+**** FILE SUMMARY
+
+Input      D:\Learning\Graduate\isye524\project\Madison2\MadisonTsp2.gms
+Output     D:\Learning\Graduate\isye524\project\Madison2\MadisonTsp2.lst
