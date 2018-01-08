@@ -1,0 +1,1327 @@
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/17/17 20:00:31 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+   1  set     n       Airport locations /0*9/
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/17/17 20:00:31 Page 2
+TSP Model
+C o m p i l a t i o n
+
+
+   5   
+   6   
+   7  alias (i,j,n);
+   8  set ks(i)/0/;
+   9  set m number of cars/1*3/;
+  10  table   c(i,j)  Travel distances
+INCLUDE    D:\Learning\Graduate\isye524\project\submit\Model1\experiments_run\distance.csv
+  13  ,0,1,2,3,4,5,6,7,8,9
+  14  0,0.88,3.67,4.16,5.92,1.57,1.59,3.60,5.02,1.68,3.78
+  15  1,6.89,0.52,1.14,1.52,2.01,10.24,4.94,0.98,5.13,2.27
+  16  2,5.32,8.58,3.19,2.40,1.60,2.59,1.61,1.47,4.51,2.19
+  17  3,4.35,2.42,1.94,1.16,2.48,5.57,12.32,1.14,5.15,1.85
+  18  4,3.91,3.09,2.95,1.42,0.62,1.22,2.90,2.56,1.25,6.63
+  19  5,6.48,5.48,2.12,3.10,1.22,0.94,0.71,1.97,0.69,2.65
+  20  6,2.99,3.84,3.70,2.36,3.90,4.73,2.13,2.72,3.35,2.23
+  21  7,2.81,1.12,1.04,6.69,10.43,2.82,5.68,0.56,1.88,2.41
+  22  8,3.07,2.33,2.51,14.12,2.05,1.50,3.58,4.48,0.64,3.56
+  23  9,2.86,2.58,2.51,1.34,3.18,3.71,2.52,3.56,2.58,2.81
+  25  ;
+  26   
+  27  binary variable        X(m,i,j)  Travel assignment;
+  28   
+  29  variable        OBJ     Objective function;
+  30   
+  31  variable U(m,i) Position of node in tour;
+  32  set notconnecting(i,j)   /
+INCLUDE    D:\Learning\Graduate\isye524\project\submit\Model1\experiments_run\notconnectingdata.dat
+  34  8.9 8.0 3.4
+  35  /;
+  36  variable len_each(m);
+  37  equations       objdef,
+  38                  out cars out of each cities except for the original city is 1,
+  39                  in  cars go into each cities except for the original city is 1,
+  40                  lendef traveling distance of each car,
+  41                  initc each car goes out of the original city once,
+  42                  initcend each car goes out of the original city once,
+  43                  consistdef if a city is visited by one car _ the car should also be out of the city;
+  44   
+  45  lendef(m)..        len_each(m) =e= sum((i,j),c(i,j)*X(m,i,j));
+  46   
+  47  out(i)$(ord(i)>1)..        sum((m,j),X(m,i,j)) =e= 1;
+  48   
+  49  in(j)$(ord(j)>1)..         sum((m,i),X(m,i,j)) =e= 1;
+  50  initc(m)..         sum(j,X(m,'0',j)) =e= 1;
+  51  initcend(m)..      sum(i,X(m,i,'0')) =e= 1;
+  52  objdef(m)..     obj=g=len_each(m);
+  53  consistdef(m,i)..        sum(n,X(m,n,i)) =e= sum(n,X(m,i,n));
+  54  X.FX(m,i,i) = 0;
+  55  X.FX(m,notconnecting(i,j))=0;
+  56   
+  57   
+  58  equation subtour;
+  59  subtour(m,i,j)$(ord(j)>1).. U(m,i) - U(m,j) + card(n) *X(m,i,j) =L= card(n) - 1;
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/17/17 20:00:31 Page 3
+TSP Model
+C o m p i l a t i o n
+
+
+  60  U.LO(m,i) = 1;
+  61  U.UP(m,i) = card(n);
+  62  model mtz /all/;
+  63   
+  64  solve mtz using mip minimizing OBJ;
+  65   
+  66  option X:0:0:1;
+  67  display X.L;
+  68  parameter route;
+  69  route(m,i,j)=x.l(m,i,j)$(x.l(m,i,j)>0) ;
+  70  execute_unload 'multi_ver2.9.gdx',route;
+  71  execute 'gdxxrw.exe i=multi_ver2.9.gdx o=route.xls par=route rdim=3' ;
+  72  *execute 'gdxxrw.exe results.gdx o=results.xls var=solsum'
+  73  *execute  'cd /D D:\Learning\Graduate\isye524\project';
+  74  *execute  'cd /D D:\Learning\Graduate\isye524\project';
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/17/17 20:00:31 Page 4
+TSP Model
+Include File Summary
+
+
+   SEQ   GLOBAL TYPE      PARENT   LOCAL  FILENAME
+
+     1        1 INPUT          0       0  D:\Learning\Graduate\isye524\project\submit\Model1\experiments_run\temp.gms
+     2       12 INCLUDE        1      12  .D:\Learning\Graduate\isye524\project\submit\Model1\experiments_run\distance.csv
+     3       33 INCLUDE        1      22  .D:\Learning\Graduate\isye524\project\submit\Model1\experiments_run\notconnectingdata.dat
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/17/17 20:00:31 Page 5
+TSP Model
+Equation Listing    SOLVE mtz Using MIP From line 64
+
+
+---- objdef  =G=  
+
+objdef(1)..  OBJ - len_each(1) =G= 0 ; (LHS = 0)
+     
+objdef(2)..  OBJ - len_each(2) =G= 0 ; (LHS = 0)
+     
+objdef(3)..  OBJ - len_each(3) =G= 0 ; (LHS = 0)
+     
+
+---- out  =E=  cars out of each cities except for the original city is 1
+
+out(1)..  X(1,1,0) + X(1,1,1) + X(1,1,2) + X(1,1,3) + X(1,1,4) + X(1,1,5) + X(1,1,6) + X(1,1,7) + X(1,1,8) + X(1,1,9) + X(2,1,0) + X(2,1,1) + X(2,1,2) + X(2,1,3) + X(2,1,4) + X(2,1,5) + X(2,1,6) + X(2,1,7) + X(2,1,8) + X(2,1,9) + X(3,1,0) + X(3,1,1)
+     
+      + X(3,1,2) + X(3,1,3) + X(3,1,4) + X(3,1,5) + X(3,1,6) + X(3,1,7) + X(3,1,8) + X(3,1,9) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+out(2)..  X(1,2,0) + X(1,2,1) + X(1,2,2) + X(1,2,3) + X(1,2,4) + X(1,2,5) + X(1,2,6) + X(1,2,7) + X(1,2,8) + X(1,2,9) + X(2,2,0) + X(2,2,1) + X(2,2,2) + X(2,2,3) + X(2,2,4) + X(2,2,5) + X(2,2,6) + X(2,2,7) + X(2,2,8) + X(2,2,9) + X(3,2,0) + X(3,2,1)
+     
+      + X(3,2,2) + X(3,2,3) + X(3,2,4) + X(3,2,5) + X(3,2,6) + X(3,2,7) + X(3,2,8) + X(3,2,9) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+out(3)..  X(1,3,0) + X(1,3,1) + X(1,3,2) + X(1,3,3) + X(1,3,4) + X(1,3,5) + X(1,3,6) + X(1,3,7) + X(1,3,8) + X(1,3,9) + X(2,3,0) + X(2,3,1) + X(2,3,2) + X(2,3,3) + X(2,3,4) + X(2,3,5) + X(2,3,6) + X(2,3,7) + X(2,3,8) + X(2,3,9) + X(3,3,0) + X(3,3,1)
+     
+      + X(3,3,2) + X(3,3,3) + X(3,3,4) + X(3,3,5) + X(3,3,6) + X(3,3,7) + X(3,3,8) + X(3,3,9) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 6 ENTRIES SKIPPED
+
+
+---- in  =E=  cars go into each cities except for the original city is 1
+
+in(1)..  X(1,0,1) + X(1,1,1) + X(1,2,1) + X(1,3,1) + X(1,4,1) + X(1,5,1) + X(1,6,1) + X(1,7,1) + X(1,8,1) + X(1,9,1) + X(2,0,1) + X(2,1,1) + X(2,2,1) + X(2,3,1) + X(2,4,1) + X(2,5,1) + X(2,6,1) + X(2,7,1) + X(2,8,1) + X(2,9,1) + X(3,0,1) + X(3,1,1)
+     
+      + X(3,2,1) + X(3,3,1) + X(3,4,1) + X(3,5,1) + X(3,6,1) + X(3,7,1) + X(3,8,1) + X(3,9,1) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+in(2)..  X(1,0,2) + X(1,1,2) + X(1,2,2) + X(1,3,2) + X(1,4,2) + X(1,5,2) + X(1,6,2) + X(1,7,2) + X(1,8,2) + X(1,9,2) + X(2,0,2) + X(2,1,2) + X(2,2,2) + X(2,3,2) + X(2,4,2) + X(2,5,2) + X(2,6,2) + X(2,7,2) + X(2,8,2) + X(2,9,2) + X(3,0,2) + X(3,1,2)
+     
+      + X(3,2,2) + X(3,3,2) + X(3,4,2) + X(3,5,2) + X(3,6,2) + X(3,7,2) + X(3,8,2) + X(3,9,2) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+in(3)..  X(1,0,3) + X(1,1,3) + X(1,2,3) + X(1,3,3) + X(1,4,3) + X(1,5,3) + X(1,6,3) + X(1,7,3) + X(1,8,3) + X(1,9,3) + X(2,0,3) + X(2,1,3) + X(2,2,3) + X(2,3,3) + X(2,4,3) + X(2,5,3) + X(2,6,3) + X(2,7,3) + X(2,8,3) + X(2,9,3) + X(3,0,3) + X(3,1,3)
+     
+      + X(3,2,3) + X(3,3,3) + X(3,4,3) + X(3,5,3) + X(3,6,3) + X(3,7,3) + X(3,8,3) + X(3,9,3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 6 ENTRIES SKIPPED
+
+
+---- lendef  =E=  traveling distance of each car
+
+lendef(1)..  - 0.88*X(1,0,0) - 3.67*X(1,0,1) - 4.16*X(1,0,2) - 5.92*X(1,0,3) - 1.57*X(1,0,4) - 1.59*X(1,0,5) - 3.6*X(1,0,6) - 5.02*X(1,0,7) - 1.68*X(1,0,8) - 3.78*X(1,0,9) - 6.89*X(1,1,0) - 0.52*X(1,1,1) - 1.14*X(1,1,2) - 1.52*X(1,1,3) - 2.01*X(1,1,4)
+     
+      - 10.24*X(1,1,5) - 4.94*X(1,1,6) - 0.98*X(1,1,7) - 5.13*X(1,1,8) - 2.27*X(1,1,9) - 5.32*X(1,2,0) - 8.58*X(1,2,1) - 3.19*X(1,2,2) - 2.4*X(1,2,3) - 1.6*X(1,2,4) - 2.59*X(1,2,5) - 1.61*X(1,2,6) - 1.47*X(1,2,7) - 4.51*X(1,2,8) - 2.19*X(1,2,9)
+     
+      - 4.35*X(1,3,0) - 2.42*X(1,3,1) - 1.94*X(1,3,2) - 1.16*X(1,3,3) - 2.48*X(1,3,4) - 5.57*X(1,3,5) - 12.32*X(1,3,6) - 1.14*X(1,3,7) - 5.15*X(1,3,8) - 1.85*X(1,3,9) - 3.91*X(1,4,0) - 3.09*X(1,4,1) - 2.95*X(1,4,2) - 1.42*X(1,4,3) - 0.62*X(1,4,4)
+     
+      - 1.22*X(1,4,5) - 2.9*X(1,4,6) - 2.56*X(1,4,7) - 1.25*X(1,4,8) - 6.63*X(1,4,9) - 6.48*X(1,5,0) - 5.48*X(1,5,1) - 2.12*X(1,5,2) - 3.1*X(1,5,3) - 1.22*X(1,5,4) - 0.94*X(1,5,5) - 0.71*X(1,5,6) - 1.97*X(1,5,7) - 0.69*X(1,5,8) - 2.65*X(1,5,9)
+     
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/17/17 20:00:31 Page 6
+TSP Model
+Equation Listing    SOLVE mtz Using MIP From line 64
+
+
+     lendef  =E=  traveling distance of each car     
+     
+      - 2.99*X(1,6,0) - 3.84*X(1,6,1) - 3.7*X(1,6,2) - 2.36*X(1,6,3) - 3.9*X(1,6,4) - 4.73*X(1,6,5) - 2.13*X(1,6,6) - 2.72*X(1,6,7) - 3.35*X(1,6,8) - 2.23*X(1,6,9) - 2.81*X(1,7,0) - 1.12*X(1,7,1) - 1.04*X(1,7,2) - 6.69*X(1,7,3) - 10.43*X(1,7,4)
+     
+      - 2.82*X(1,7,5) - 5.68*X(1,7,6) - 0.56*X(1,7,7) - 1.88*X(1,7,8) - 2.41*X(1,7,9) - 3.07*X(1,8,0) - 2.33*X(1,8,1) - 2.51*X(1,8,2) - 14.12*X(1,8,3) - 2.05*X(1,8,4) - 1.5*X(1,8,5) - 3.58*X(1,8,6) - 4.48*X(1,8,7) - 0.64*X(1,8,8) - 3.56*X(1,8,9)
+     
+      - 2.86*X(1,9,0) - 2.58*X(1,9,1) - 2.51*X(1,9,2) - 1.34*X(1,9,3) - 3.18*X(1,9,4) - 3.71*X(1,9,5) - 2.52*X(1,9,6) - 3.56*X(1,9,7) - 2.58*X(1,9,8) - 2.81*X(1,9,9) + len_each(1) =E= 0 ; (LHS = 0)
+     
+lendef(2)..  - 0.88*X(2,0,0) - 3.67*X(2,0,1) - 4.16*X(2,0,2) - 5.92*X(2,0,3) - 1.57*X(2,0,4) - 1.59*X(2,0,5) - 3.6*X(2,0,6) - 5.02*X(2,0,7) - 1.68*X(2,0,8) - 3.78*X(2,0,9) - 6.89*X(2,1,0) - 0.52*X(2,1,1) - 1.14*X(2,1,2) - 1.52*X(2,1,3) - 2.01*X(2,1,4)
+     
+      - 10.24*X(2,1,5) - 4.94*X(2,1,6) - 0.98*X(2,1,7) - 5.13*X(2,1,8) - 2.27*X(2,1,9) - 5.32*X(2,2,0) - 8.58*X(2,2,1) - 3.19*X(2,2,2) - 2.4*X(2,2,3) - 1.6*X(2,2,4) - 2.59*X(2,2,5) - 1.61*X(2,2,6) - 1.47*X(2,2,7) - 4.51*X(2,2,8) - 2.19*X(2,2,9)
+     
+      - 4.35*X(2,3,0) - 2.42*X(2,3,1) - 1.94*X(2,3,2) - 1.16*X(2,3,3) - 2.48*X(2,3,4) - 5.57*X(2,3,5) - 12.32*X(2,3,6) - 1.14*X(2,3,7) - 5.15*X(2,3,8) - 1.85*X(2,3,9) - 3.91*X(2,4,0) - 3.09*X(2,4,1) - 2.95*X(2,4,2) - 1.42*X(2,4,3) - 0.62*X(2,4,4)
+     
+      - 1.22*X(2,4,5) - 2.9*X(2,4,6) - 2.56*X(2,4,7) - 1.25*X(2,4,8) - 6.63*X(2,4,9) - 6.48*X(2,5,0) - 5.48*X(2,5,1) - 2.12*X(2,5,2) - 3.1*X(2,5,3) - 1.22*X(2,5,4) - 0.94*X(2,5,5) - 0.71*X(2,5,6) - 1.97*X(2,5,7) - 0.69*X(2,5,8) - 2.65*X(2,5,9)
+     
+      - 2.99*X(2,6,0) - 3.84*X(2,6,1) - 3.7*X(2,6,2) - 2.36*X(2,6,3) - 3.9*X(2,6,4) - 4.73*X(2,6,5) - 2.13*X(2,6,6) - 2.72*X(2,6,7) - 3.35*X(2,6,8) - 2.23*X(2,6,9) - 2.81*X(2,7,0) - 1.12*X(2,7,1) - 1.04*X(2,7,2) - 6.69*X(2,7,3) - 10.43*X(2,7,4)
+     
+      - 2.82*X(2,7,5) - 5.68*X(2,7,6) - 0.56*X(2,7,7) - 1.88*X(2,7,8) - 2.41*X(2,7,9) - 3.07*X(2,8,0) - 2.33*X(2,8,1) - 2.51*X(2,8,2) - 14.12*X(2,8,3) - 2.05*X(2,8,4) - 1.5*X(2,8,5) - 3.58*X(2,8,6) - 4.48*X(2,8,7) - 0.64*X(2,8,8) - 3.56*X(2,8,9)
+     
+      - 2.86*X(2,9,0) - 2.58*X(2,9,1) - 2.51*X(2,9,2) - 1.34*X(2,9,3) - 3.18*X(2,9,4) - 3.71*X(2,9,5) - 2.52*X(2,9,6) - 3.56*X(2,9,7) - 2.58*X(2,9,8) - 2.81*X(2,9,9) + len_each(2) =E= 0 ; (LHS = 0)
+     
+lendef(3)..  - 0.88*X(3,0,0) - 3.67*X(3,0,1) - 4.16*X(3,0,2) - 5.92*X(3,0,3) - 1.57*X(3,0,4) - 1.59*X(3,0,5) - 3.6*X(3,0,6) - 5.02*X(3,0,7) - 1.68*X(3,0,8) - 3.78*X(3,0,9) - 6.89*X(3,1,0) - 0.52*X(3,1,1) - 1.14*X(3,1,2) - 1.52*X(3,1,3) - 2.01*X(3,1,4)
+     
+      - 10.24*X(3,1,5) - 4.94*X(3,1,6) - 0.98*X(3,1,7) - 5.13*X(3,1,8) - 2.27*X(3,1,9) - 5.32*X(3,2,0) - 8.58*X(3,2,1) - 3.19*X(3,2,2) - 2.4*X(3,2,3) - 1.6*X(3,2,4) - 2.59*X(3,2,5) - 1.61*X(3,2,6) - 1.47*X(3,2,7) - 4.51*X(3,2,8) - 2.19*X(3,2,9)
+     
+      - 4.35*X(3,3,0) - 2.42*X(3,3,1) - 1.94*X(3,3,2) - 1.16*X(3,3,3) - 2.48*X(3,3,4) - 5.57*X(3,3,5) - 12.32*X(3,3,6) - 1.14*X(3,3,7) - 5.15*X(3,3,8) - 1.85*X(3,3,9) - 3.91*X(3,4,0) - 3.09*X(3,4,1) - 2.95*X(3,4,2) - 1.42*X(3,4,3) - 0.62*X(3,4,4)
+     
+      - 1.22*X(3,4,5) - 2.9*X(3,4,6) - 2.56*X(3,4,7) - 1.25*X(3,4,8) - 6.63*X(3,4,9) - 6.48*X(3,5,0) - 5.48*X(3,5,1) - 2.12*X(3,5,2) - 3.1*X(3,5,3) - 1.22*X(3,5,4) - 0.94*X(3,5,5) - 0.71*X(3,5,6) - 1.97*X(3,5,7) - 0.69*X(3,5,8) - 2.65*X(3,5,9)
+     
+      - 2.99*X(3,6,0) - 3.84*X(3,6,1) - 3.7*X(3,6,2) - 2.36*X(3,6,3) - 3.9*X(3,6,4) - 4.73*X(3,6,5) - 2.13*X(3,6,6) - 2.72*X(3,6,7) - 3.35*X(3,6,8) - 2.23*X(3,6,9) - 2.81*X(3,7,0) - 1.12*X(3,7,1) - 1.04*X(3,7,2) - 6.69*X(3,7,3) - 10.43*X(3,7,4)
+     
+      - 2.82*X(3,7,5) - 5.68*X(3,7,6) - 0.56*X(3,7,7) - 1.88*X(3,7,8) - 2.41*X(3,7,9) - 3.07*X(3,8,0) - 2.33*X(3,8,1) - 2.51*X(3,8,2) - 14.12*X(3,8,3) - 2.05*X(3,8,4) - 1.5*X(3,8,5) - 3.58*X(3,8,6) - 4.48*X(3,8,7) - 0.64*X(3,8,8) - 3.56*X(3,8,9)
+     
+      - 2.86*X(3,9,0) - 2.58*X(3,9,1) - 2.51*X(3,9,2) - 1.34*X(3,9,3) - 3.18*X(3,9,4) - 3.71*X(3,9,5) - 2.52*X(3,9,6) - 3.56*X(3,9,7) - 2.58*X(3,9,8) - 2.81*X(3,9,9) + len_each(3) =E= 0 ; (LHS = 0)
+     
+
+---- initc  =E=  each car goes out of the original city once
+
+initc(1)..  X(1,0,0) + X(1,0,1) + X(1,0,2) + X(1,0,3) + X(1,0,4) + X(1,0,5) + X(1,0,6) + X(1,0,7) + X(1,0,8) + X(1,0,9) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+initc(2)..  X(2,0,0) + X(2,0,1) + X(2,0,2) + X(2,0,3) + X(2,0,4) + X(2,0,5) + X(2,0,6) + X(2,0,7) + X(2,0,8) + X(2,0,9) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+initc(3)..  X(3,0,0) + X(3,0,1) + X(3,0,2) + X(3,0,3) + X(3,0,4) + X(3,0,5) + X(3,0,6) + X(3,0,7) + X(3,0,8) + X(3,0,9) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+
+---- initcend  =E=  each car goes out of the original city once
+
+initcend(1)..  X(1,0,0) + X(1,1,0) + X(1,2,0) + X(1,3,0) + X(1,4,0) + X(1,5,0) + X(1,6,0) + X(1,7,0) + X(1,8,0) + X(1,9,0) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/17/17 20:00:31 Page 7
+TSP Model
+Equation Listing    SOLVE mtz Using MIP From line 64
+
+
+     initcend  =E=  each car goes out of the original city once
+
+initcend(2)..  X(2,0,0) + X(2,1,0) + X(2,2,0) + X(2,3,0) + X(2,4,0) + X(2,5,0) + X(2,6,0) + X(2,7,0) + X(2,8,0) + X(2,9,0) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+initcend(3)..  X(3,0,0) + X(3,1,0) + X(3,2,0) + X(3,3,0) + X(3,4,0) + X(3,5,0) + X(3,6,0) + X(3,7,0) + X(3,8,0) + X(3,9,0) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+
+---- consistdef  =E=  if a city is visited by one car _ the car should also be out of the city
+
+consistdef(1,0)..  - X(1,0,1) - X(1,0,2) - X(1,0,3) - X(1,0,4) - X(1,0,5) - X(1,0,6) - X(1,0,7) - X(1,0,8) - X(1,0,9) + X(1,1,0) + X(1,2,0) + X(1,3,0) + X(1,4,0) + X(1,5,0) + X(1,6,0) + X(1,7,0) + X(1,8,0) + X(1,9,0) =E= 0 ; (LHS = 0)
+     
+consistdef(1,1)..  X(1,0,1) - X(1,1,0) - X(1,1,2) - X(1,1,3) - X(1,1,4) - X(1,1,5) - X(1,1,6) - X(1,1,7) - X(1,1,8) - X(1,1,9) + X(1,2,1) + X(1,3,1) + X(1,4,1) + X(1,5,1) + X(1,6,1) + X(1,7,1) + X(1,8,1) + X(1,9,1) =E= 0 ; (LHS = 0)
+     
+consistdef(1,2)..  X(1,0,2) + X(1,1,2) - X(1,2,0) - X(1,2,1) - X(1,2,3) - X(1,2,4) - X(1,2,5) - X(1,2,6) - X(1,2,7) - X(1,2,8) - X(1,2,9) + X(1,3,2) + X(1,4,2) + X(1,5,2) + X(1,6,2) + X(1,7,2) + X(1,8,2) + X(1,9,2) =E= 0 ; (LHS = 0)
+     
+REMAINING 27 ENTRIES SKIPPED
+
+
+---- subtour  =L=  
+
+subtour(1,0,1)..  10*X(1,0,1) + U(1,0) - U(1,1) =L= 9 ; (LHS = 0)
+     
+subtour(1,0,2)..  10*X(1,0,2) + U(1,0) - U(1,2) =L= 9 ; (LHS = 0)
+     
+subtour(1,0,3)..  10*X(1,0,3) + U(1,0) - U(1,3) =L= 9 ; (LHS = 0)
+     
+REMAINING 267 ENTRIES SKIPPED
+
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/17/17 20:00:31 Page 8
+TSP Model
+Column Listing      SOLVE mtz Using MIP From line 64
+
+
+---- X  Travel assignment
+
+X(1,0,0)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+       -0.88    lendef(1)
+        1       initc(1)
+        1       initcend(1)
+
+X(1,0,1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       in(1)
+       -3.67    lendef(1)
+        1       initc(1)
+       -1       consistdef(1,0)
+        1       consistdef(1,1)
+       10       subtour(1,0,1)
+
+X(1,0,2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       in(2)
+       -4.16    lendef(1)
+        1       initc(1)
+       -1       consistdef(1,0)
+        1       consistdef(1,2)
+       10       subtour(1,0,2)
+
+REMAINING 297 ENTRIES SKIPPED
+
+---- OBJ  Objective function
+
+OBJ
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       objdef(1)
+        1       objdef(2)
+        1       objdef(3)
+
+
+---- U  Position of node in tour
+
+U(1,0)
+                (.LO, .L, .UP, .M = 1, 1, 10, 0)
+        1       subtour(1,0,1)
+        1       subtour(1,0,2)
+        1       subtour(1,0,3)
+        1       subtour(1,0,4)
+        1       subtour(1,0,5)
+        1       subtour(1,0,6)
+        1       subtour(1,0,7)
+        1       subtour(1,0,8)
+        1       subtour(1,0,9)
+        0       (OLD LEVEL ****)
+
+U(1,1)
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                 12/17/17 20:00:31 Page 9
+TSP Model
+Column Listing      SOLVE mtz Using MIP From line 64
+
+
+     U  Position of node in tour
+
+                (.LO, .L, .UP, .M = 1, 1, 10, 0)
+       -1       subtour(1,0,1)
+        1       subtour(1,1,2)
+        1       subtour(1,1,3)
+        1       subtour(1,1,4)
+        1       subtour(1,1,5)
+        1       subtour(1,1,6)
+        1       subtour(1,1,7)
+        1       subtour(1,1,8)
+        1       subtour(1,1,9)
+       -1       subtour(1,2,1)
+       -1       subtour(1,3,1)
+       -1       subtour(1,4,1)
+       -1       subtour(1,5,1)
+       -1       subtour(1,6,1)
+       -1       subtour(1,7,1)
+       -1       subtour(1,8,1)
+       -1       subtour(1,9,1)
+        0       (OLD LEVEL ****)
+
+U(1,2)
+                (.LO, .L, .UP, .M = 1, 1, 10, 0)
+       -1       subtour(1,0,2)
+       -1       subtour(1,1,2)
+        1       subtour(1,2,1)
+        1       subtour(1,2,3)
+        1       subtour(1,2,4)
+        1       subtour(1,2,5)
+        1       subtour(1,2,6)
+        1       subtour(1,2,7)
+        1       subtour(1,2,8)
+        1       subtour(1,2,9)
+       -1       subtour(1,3,2)
+       -1       subtour(1,4,2)
+       -1       subtour(1,5,2)
+       -1       subtour(1,6,2)
+       -1       subtour(1,7,2)
+       -1       subtour(1,8,2)
+       -1       subtour(1,9,2)
+        0       (OLD LEVEL ****)
+
+REMAINING 27 ENTRIES SKIPPED
+
+---- len_each  
+
+len_each(1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       objdef(1)
+        1       lendef(1)
+
+len_each(2)
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:00:31 Page 10
+TSP Model
+Column Listing      SOLVE mtz Using MIP From line 64
+
+
+     len_each  
+
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       objdef(2)
+        1       lendef(2)
+
+len_each(3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       objdef(3)
+        1       lendef(3)
+
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:00:31 Page 11
+TSP Model
+Model Statistics    SOLVE mtz Using MIP From line 64
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           8     SINGLE EQUATIONS          330
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES          334  30 projected
+NON ZERO ELEMENTS         2,205     DISCRETE VARIABLES        267
+
+
+GENERATION TIME      =        0.015 SECONDS      4 MB  24.9.1 r63795 WEX-WEI
+
+
+EXECUTION TIME       =        0.015 SECONDS      4 MB  24.9.1 r63795 WEX-WEI
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:00:31 Page 12
+TSP Model
+Solution Report     SOLVE mtz Using MIP From line 64
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   mtz                 OBJECTIVE  OBJ
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  64
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      8 Integer Solution          
+**** OBJECTIVE VALUE                9.1400
+
+ RESOURCE USAGE, LIMIT          0.218      1000.000
+ ITERATION COUNT, LIMIT      1196    2000000000
+
+IBM ILOG CPLEX   24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
+--- GAMS/Cplex licensed for continuous and discrete problems.
+Cplex 12.7.1.0
+
+Space for names approximately 0.01 Mb
+Use option 'names no' to turn use of names off
+MIP status(102): integer optimal, tolerance
+Cplex Time: 0.19sec (det. 57.70 ticks)
+Fixing integer variables, and solving final LP...
+Fixed MIP status(1): optimal
+Cplex Time: 0.02sec (det. 0.32 ticks)
+Solution satisfies tolerances.
+
+MIP Solution:            9.140000    (1196 iterations, 58 nodes)
+Final Solve:             9.140000    (0 iterations)
+
+Best possible:           8.310000
+Absolute gap:            0.830000
+Relative gap:            0.090810
+
+
+---- EQU objdef  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1          .             0.1300        +INF             .          
+2          .             0.3400        +INF             .          
+3          .              .            +INF            1.0000      
+
+---- EQU out  cars out of each cities except for the original city is 1
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1         1.0000         1.0000         1.0000          .          
+2         1.0000         1.0000         1.0000          .          
+3         1.0000         1.0000         1.0000          .          
+4         1.0000         1.0000         1.0000          .          
+5         1.0000         1.0000         1.0000          .          
+6         1.0000         1.0000         1.0000          .          
+7         1.0000         1.0000         1.0000          .          
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:00:31 Page 13
+TSP Model
+Solution Report     SOLVE mtz Using MIP From line 64
+
+
+     EQU out  cars out of each cities except for the original city is 1
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+8         1.0000         1.0000         1.0000          .          
+9         1.0000         1.0000         1.0000          .          
+
+---- EQU in  cars go into each cities except for the original city is 1
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1         1.0000         1.0000         1.0000          .          
+2         1.0000         1.0000         1.0000          .          
+3         1.0000         1.0000         1.0000          .          
+4         1.0000         1.0000         1.0000          .          
+5         1.0000         1.0000         1.0000          .          
+6         1.0000         1.0000         1.0000          .          
+7         1.0000         1.0000         1.0000          .          
+8         1.0000         1.0000         1.0000          .          
+9         1.0000         1.0000         1.0000          .          
+
+---- EQU lendef  traveling distance of each car
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1          .              .              .             EPS         
+2          .              .              .             EPS         
+3          .              .              .             1.0000      
+
+---- EQU initc  each car goes out of the original city once
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1         1.0000         1.0000         1.0000          .          
+2         1.0000         1.0000         1.0000          .          
+3         1.0000         1.0000         1.0000          .          
+
+---- EQU initcend  each car goes out of the original city once
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1         1.0000         1.0000         1.0000          .          
+2         1.0000         1.0000         1.0000          .          
+3         1.0000         1.0000         1.0000          .          
+
+---- EQU consistdef  if a city is visited by one car _ the car should also be out of the city
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+1.0          .              .              .              .          
+1.1          .              .              .              .          
+1.2          .              .              .              .          
+1.3          .              .              .              .          
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:00:31 Page 14
+TSP Model
+Solution Report     SOLVE mtz Using MIP From line 64
+
+
+     EQU consistdef  if a city is visited by one car _ the car should also be out of the city
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+1.4          .              .              .              .          
+1.5          .              .              .              .          
+1.6          .              .              .              .          
+1.7          .              .              .              .          
+1.8          .              .              .              .          
+1.9          .              .              .              .          
+2.0          .              .              .              .          
+2.1          .              .              .              .          
+2.2          .              .              .              .          
+2.3          .              .              .              .          
+2.4          .              .              .              .          
+2.5          .              .              .              .          
+2.6          .              .              .              .          
+2.7          .              .              .              .          
+2.8          .              .              .              .          
+2.9          .              .              .              .          
+3.0          .              .              .              .          
+3.1          .              .              .              .          
+3.2          .              .              .              .          
+3.3          .              .              .              .          
+3.4          .              .              .              .          
+3.5          .              .              .              .          
+3.6          .              .              .              .          
+3.7          .              .              .              .          
+3.8          .              .              .              .          
+3.9          .              .              .              .          
+
+---- EQU subtour  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+1.0.1        -INF             .             9.0000          .          
+1.0.2        -INF             .             9.0000          .          
+1.0.3        -INF           -9.0000         9.0000          .          
+1.0.4        -INF             .             9.0000          .          
+1.0.5        -INF            9.0000         9.0000         EPS         
+1.0.6        -INF           -8.0000         9.0000          .          
+1.0.7        -INF             .             9.0000          .          
+1.0.8        -INF             .             9.0000          .          
+1.0.9        -INF             .             9.0000          .          
+1.1.1        -INF             .             9.0000          .          
+1.1.2        -INF             .             9.0000          .          
+1.1.3        -INF           -9.0000         9.0000          .          
+1.1.4        -INF             .             9.0000          .          
+1.1.5        -INF           -1.0000         9.0000          .          
+1.1.6        -INF           -8.0000         9.0000          .          
+1.1.7        -INF             .             9.0000          .          
+1.1.8        -INF             .             9.0000          .          
+1.1.9        -INF             .             9.0000          .          
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:00:31 Page 15
+TSP Model
+Solution Report     SOLVE mtz Using MIP From line 64
+
+
+     EQU subtour  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+1.2.1        -INF             .             9.0000          .          
+1.2.2        -INF             .             9.0000          .          
+1.2.3        -INF           -9.0000         9.0000          .          
+1.2.4        -INF             .             9.0000          .          
+1.2.5        -INF           -1.0000         9.0000          .          
+1.2.6        -INF           -8.0000         9.0000          .          
+1.2.7        -INF             .             9.0000          .          
+1.2.8        -INF             .             9.0000          .          
+1.2.9        -INF             .             9.0000          .          
+1.3.1        -INF            9.0000         9.0000          .          
+1.3.2        -INF            9.0000         9.0000          .          
+1.3.3        -INF             .             9.0000          .          
+1.3.4        -INF            9.0000         9.0000          .          
+1.3.5        -INF            8.0000         9.0000          .          
+1.3.6        -INF            1.0000         9.0000          .          
+1.3.7        -INF            9.0000         9.0000          .          
+1.3.8        -INF            9.0000         9.0000          .          
+1.3.9        -INF            9.0000         9.0000          .          
+1.4.1        -INF             .             9.0000          .          
+1.4.2        -INF             .             9.0000          .          
+1.4.3        -INF           -9.0000         9.0000          .          
+1.4.4        -INF             .             9.0000          .          
+1.4.5        -INF           -1.0000         9.0000          .          
+1.4.6        -INF           -8.0000         9.0000          .          
+1.4.7        -INF             .             9.0000          .          
+1.4.8        -INF             .             9.0000          .          
+1.4.9        -INF             .             9.0000          .          
+1.5.1        -INF            1.0000         9.0000          .          
+1.5.2        -INF            1.0000         9.0000          .          
+1.5.3        -INF           -8.0000         9.0000          .          
+1.5.4        -INF            1.0000         9.0000          .          
+1.5.5        -INF             .             9.0000          .          
+1.5.6        -INF            3.0000         9.0000          .          
+1.5.7        -INF            1.0000         9.0000          .          
+1.5.8        -INF            1.0000         9.0000          .          
+1.5.9        -INF            1.0000         9.0000          .          
+1.6.1        -INF            8.0000         9.0000          .          
+1.6.2        -INF            8.0000         9.0000          .          
+1.6.3        -INF            9.0000         9.0000         EPS         
+1.6.4        -INF            8.0000         9.0000          .          
+1.6.5        -INF            7.0000         9.0000          .          
+1.6.6        -INF             .             9.0000          .          
+1.6.7        -INF            8.0000         9.0000          .          
+1.6.8        -INF            8.0000         9.0000          .          
+1.6.9        -INF            8.0000         9.0000          .          
+1.7.1        -INF             .             9.0000          .          
+1.7.2        -INF             .             9.0000          .          
+1.7.3        -INF           -9.0000         9.0000          .          
+1.7.4        -INF             .             9.0000          .          
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:00:31 Page 16
+TSP Model
+Solution Report     SOLVE mtz Using MIP From line 64
+
+
+     EQU subtour  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+1.7.5        -INF           -1.0000         9.0000          .          
+1.7.6        -INF           -8.0000         9.0000          .          
+1.7.7        -INF             .             9.0000          .          
+1.7.8        -INF             .             9.0000          .          
+1.7.9        -INF             .             9.0000          .          
+1.8.1        -INF             .             9.0000          .          
+1.8.2        -INF             .             9.0000          .          
+1.8.3        -INF           -9.0000         9.0000          .          
+1.8.4        -INF             .             9.0000          .          
+1.8.5        -INF           -1.0000         9.0000          .          
+1.8.6        -INF           -8.0000         9.0000          .          
+1.8.7        -INF             .             9.0000          .          
+1.8.8        -INF             .             9.0000          .          
+1.8.9        -INF             .             9.0000          .          
+1.9.1        -INF             .             9.0000          .          
+1.9.2        -INF             .             9.0000          .          
+1.9.3        -INF           -9.0000         9.0000          .          
+1.9.4        -INF             .             9.0000          .          
+1.9.5        -INF           -1.0000         9.0000          .          
+1.9.6        -INF           -8.0000         9.0000          .          
+1.9.7        -INF             .             9.0000          .          
+1.9.8        -INF             .             9.0000          .          
+1.9.9        -INF             .             9.0000          .          
+2.0.1        -INF             .             9.0000          .          
+2.0.2        -INF           -8.0000         9.0000          .          
+2.0.3        -INF             .             9.0000          .          
+2.0.4        -INF            9.0000         9.0000         EPS         
+2.0.5        -INF             .             9.0000          .          
+2.0.6        -INF             .             9.0000          .          
+2.0.7        -INF           -9.0000         9.0000          .          
+2.0.8        -INF             .             9.0000          .          
+2.0.9        -INF             .             9.0000          .          
+2.1.1        -INF             .             9.0000          .          
+2.1.2        -INF           -8.0000         9.0000          .          
+2.1.3        -INF             .             9.0000          .          
+2.1.4        -INF           -1.0000         9.0000          .          
+2.1.5        -INF             .             9.0000          .          
+2.1.6        -INF             .             9.0000          .          
+2.1.7        -INF           -9.0000         9.0000          .          
+2.1.8        -INF             .             9.0000          .          
+2.1.9        -INF             .             9.0000          .          
+2.2.1        -INF            8.0000         9.0000          .          
+2.2.2        -INF             .             9.0000          .          
+2.2.3        -INF            8.0000         9.0000          .          
+2.2.4        -INF            7.0000         9.0000          .          
+2.2.5        -INF            8.0000         9.0000          .          
+2.2.6        -INF            8.0000         9.0000          .          
+2.2.7        -INF            9.0000         9.0000         EPS         
+2.2.8        -INF            8.0000         9.0000          .          
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:00:31 Page 17
+TSP Model
+Solution Report     SOLVE mtz Using MIP From line 64
+
+
+     EQU subtour  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+2.2.9        -INF            8.0000         9.0000          .          
+2.3.1        -INF             .             9.0000          .          
+2.3.2        -INF           -8.0000         9.0000          .          
+2.3.3        -INF             .             9.0000          .          
+2.3.4        -INF           -1.0000         9.0000          .          
+2.3.5        -INF             .             9.0000          .          
+2.3.6        -INF             .             9.0000          .          
+2.3.7        -INF           -9.0000         9.0000          .          
+2.3.8        -INF             .             9.0000          .          
+2.3.9        -INF             .             9.0000          .          
+2.4.1        -INF            1.0000         9.0000          .          
+2.4.2        -INF            3.0000         9.0000          .          
+2.4.3        -INF            1.0000         9.0000          .          
+2.4.4        -INF             .             9.0000          .          
+2.4.5        -INF            1.0000         9.0000          .          
+2.4.6        -INF            1.0000         9.0000          .          
+2.4.7        -INF           -8.0000         9.0000          .          
+2.4.8        -INF            1.0000         9.0000          .          
+2.4.9        -INF            1.0000         9.0000          .          
+2.5.1        -INF             .             9.0000          .          
+2.5.2        -INF           -8.0000         9.0000          .          
+2.5.3        -INF             .             9.0000          .          
+2.5.4        -INF           -1.0000         9.0000          .          
+2.5.5        -INF             .             9.0000          .          
+2.5.6        -INF             .             9.0000          .          
+2.5.7        -INF           -9.0000         9.0000          .          
+2.5.8        -INF             .             9.0000          .          
+2.5.9        -INF             .             9.0000          .          
+2.6.1        -INF             .             9.0000          .          
+2.6.2        -INF           -8.0000         9.0000          .          
+2.6.3        -INF             .             9.0000          .          
+2.6.4        -INF           -1.0000         9.0000          .          
+2.6.5        -INF             .             9.0000          .          
+2.6.6        -INF             .             9.0000          .          
+2.6.7        -INF           -9.0000         9.0000          .          
+2.6.8        -INF             .             9.0000          .          
+2.6.9        -INF             .             9.0000          .          
+2.7.1        -INF            9.0000         9.0000          .          
+2.7.2        -INF            1.0000         9.0000          .          
+2.7.3        -INF            9.0000         9.0000          .          
+2.7.4        -INF            8.0000         9.0000          .          
+2.7.5        -INF            9.0000         9.0000          .          
+2.7.6        -INF            9.0000         9.0000          .          
+2.7.7        -INF             .             9.0000          .          
+2.7.8        -INF            9.0000         9.0000          .          
+2.7.9        -INF            9.0000         9.0000          .          
+2.8.1        -INF             .             9.0000          .          
+2.8.2        -INF           -8.0000         9.0000          .          
+2.8.3        -INF             .             9.0000          .          
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:00:31 Page 18
+TSP Model
+Solution Report     SOLVE mtz Using MIP From line 64
+
+
+     EQU subtour  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+2.8.4        -INF           -1.0000         9.0000          .          
+2.8.5        -INF             .             9.0000          .          
+2.8.6        -INF             .             9.0000          .          
+2.8.7        -INF           -9.0000         9.0000          .          
+2.8.8        -INF             .             9.0000          .          
+2.8.9        -INF             .             9.0000          .          
+2.9.1        -INF             .             9.0000          .          
+2.9.2        -INF           -8.0000         9.0000          .          
+2.9.3        -INF             .             9.0000          .          
+2.9.4        -INF           -1.0000         9.0000          .          
+2.9.5        -INF             .             9.0000          .          
+2.9.6        -INF             .             9.0000          .          
+2.9.7        -INF           -9.0000         9.0000          .          
+2.9.8        -INF             .             9.0000          .          
+2.9.9        -INF             .             9.0000          .          
+3.0.1        -INF           -8.0000         9.0000          .          
+3.0.2        -INF             .             9.0000          .          
+3.0.3        -INF             .             9.0000          .          
+3.0.4        -INF             .             9.0000          .          
+3.0.5        -INF             .             9.0000          .          
+3.0.6        -INF             .             9.0000          .          
+3.0.7        -INF             .             9.0000          .          
+3.0.8        -INF            9.0000         9.0000         EPS         
+3.0.9        -INF           -9.0000         9.0000          .          
+3.1.1        -INF             .             9.0000          .          
+3.1.2        -INF            8.0000         9.0000          .          
+3.1.3        -INF            8.0000         9.0000          .          
+3.1.4        -INF            8.0000         9.0000          .          
+3.1.5        -INF            8.0000         9.0000          .          
+3.1.6        -INF            8.0000         9.0000          .          
+3.1.7        -INF            8.0000         9.0000          .          
+3.1.8        -INF            7.0000         9.0000          .          
+3.1.9        -INF            9.0000         9.0000         EPS         
+3.2.1        -INF           -8.0000         9.0000          .          
+3.2.2        -INF             .             9.0000          .          
+3.2.3        -INF             .             9.0000          .          
+3.2.4        -INF             .             9.0000          .          
+3.2.5        -INF             .             9.0000          .          
+3.2.6        -INF             .             9.0000          .          
+3.2.7        -INF             .             9.0000          .          
+3.2.8        -INF           -1.0000         9.0000          .          
+3.2.9        -INF           -9.0000         9.0000          .          
+3.3.1        -INF           -8.0000         9.0000          .          
+3.3.2        -INF             .             9.0000          .          
+3.3.3        -INF             .             9.0000          .          
+3.3.4        -INF             .             9.0000          .          
+3.3.5        -INF             .             9.0000          .          
+3.3.6        -INF             .             9.0000          .          
+3.3.7        -INF             .             9.0000          .          
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:00:31 Page 19
+TSP Model
+Solution Report     SOLVE mtz Using MIP From line 64
+
+
+     EQU subtour  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+3.3.8        -INF           -1.0000         9.0000          .          
+3.3.9        -INF           -9.0000         9.0000          .          
+3.4.1        -INF           -8.0000         9.0000          .          
+3.4.2        -INF             .             9.0000          .          
+3.4.3        -INF             .             9.0000          .          
+3.4.4        -INF             .             9.0000          .          
+3.4.5        -INF             .             9.0000          .          
+3.4.6        -INF             .             9.0000          .          
+3.4.7        -INF             .             9.0000          .          
+3.4.8        -INF           -1.0000         9.0000          .          
+3.4.9        -INF           -9.0000         9.0000          .          
+3.5.1        -INF           -8.0000         9.0000          .          
+3.5.2        -INF             .             9.0000          .          
+3.5.3        -INF             .             9.0000          .          
+3.5.4        -INF             .             9.0000          .          
+3.5.5        -INF             .             9.0000          .          
+3.5.6        -INF             .             9.0000          .          
+3.5.7        -INF             .             9.0000          .          
+3.5.8        -INF           -1.0000         9.0000          .          
+3.5.9        -INF           -9.0000         9.0000          .          
+3.6.1        -INF           -8.0000         9.0000          .          
+3.6.2        -INF             .             9.0000          .          
+3.6.3        -INF             .             9.0000          .          
+3.6.4        -INF             .             9.0000          .          
+3.6.5        -INF             .             9.0000          .          
+3.6.6        -INF             .             9.0000          .          
+3.6.7        -INF             .             9.0000          .          
+3.6.8        -INF           -1.0000         9.0000          .          
+3.6.9        -INF           -9.0000         9.0000          .          
+3.7.1        -INF           -8.0000         9.0000          .          
+3.7.2        -INF             .             9.0000          .          
+3.7.3        -INF             .             9.0000          .          
+3.7.4        -INF             .             9.0000          .          
+3.7.5        -INF             .             9.0000          .          
+3.7.6        -INF             .             9.0000          .          
+3.7.7        -INF             .             9.0000          .          
+3.7.8        -INF           -1.0000         9.0000          .          
+3.7.9        -INF           -9.0000         9.0000          .          
+3.8.1        -INF            3.0000         9.0000          .          
+3.8.2        -INF            1.0000         9.0000          .          
+3.8.3        -INF            1.0000         9.0000          .          
+3.8.4        -INF            1.0000         9.0000          .          
+3.8.5        -INF            1.0000         9.0000          .          
+3.8.6        -INF            1.0000         9.0000          .          
+3.8.7        -INF            1.0000         9.0000          .          
+3.8.8        -INF             .             9.0000          .          
+3.8.9        -INF           -8.0000         9.0000          .          
+3.9.1        -INF            1.0000         9.0000          .          
+3.9.2        -INF            9.0000         9.0000          .          
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:00:31 Page 20
+TSP Model
+Solution Report     SOLVE mtz Using MIP From line 64
+
+
+     EQU subtour  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+3.9.3        -INF            9.0000         9.0000          .          
+3.9.4        -INF            9.0000         9.0000          .          
+3.9.5        -INF            9.0000         9.0000          .          
+3.9.6        -INF            9.0000         9.0000          .          
+3.9.7        -INF            9.0000         9.0000          .          
+3.9.8        -INF            8.0000         9.0000          .          
+3.9.9        -INF             .             9.0000          .          
+
+---- VAR X  Travel assignment
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+1.0.0          .              .              .             EPS         
+1.0.1          .              .             1.0000         EPS         
+1.0.2          .              .             1.0000         EPS         
+1.0.3          .              .             1.0000         EPS         
+1.0.4          .              .             1.0000         EPS         
+1.0.5          .             1.0000         1.0000         EPS         
+1.0.6          .              .             1.0000         EPS         
+1.0.7          .              .             1.0000         EPS         
+1.0.8          .              .             1.0000         EPS         
+1.0.9          .              .             1.0000         EPS         
+1.1.0          .              .             1.0000         EPS         
+1.1.1          .              .              .             EPS         
+1.1.2          .              .             1.0000         EPS         
+1.1.3          .              .             1.0000         EPS         
+1.1.4          .              .             1.0000         EPS         
+1.1.5          .              .             1.0000         EPS         
+1.1.6          .              .             1.0000         EPS         
+1.1.7          .              .             1.0000         EPS         
+1.1.8          .              .             1.0000         EPS         
+1.1.9          .              .             1.0000         EPS         
+1.2.0          .              .             1.0000         EPS         
+1.2.1          .              .             1.0000         EPS         
+1.2.2          .              .              .             EPS         
+1.2.3          .              .             1.0000         EPS         
+1.2.4          .              .             1.0000         EPS         
+1.2.5          .              .             1.0000         EPS         
+1.2.6          .              .             1.0000         EPS         
+1.2.7          .              .             1.0000         EPS         
+1.2.8          .              .             1.0000         EPS         
+1.2.9          .              .             1.0000         EPS         
+1.3.0          .             1.0000         1.0000         EPS         
+1.3.1          .              .             1.0000         EPS         
+1.3.2          .              .             1.0000         EPS         
+1.3.3          .              .              .             EPS         
+1.3.4          .              .             1.0000         EPS         
+1.3.5          .              .             1.0000         EPS         
+1.3.6          .              .             1.0000         EPS         
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:00:31 Page 21
+TSP Model
+Solution Report     SOLVE mtz Using MIP From line 64
+
+
+     VAR X  Travel assignment
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+1.3.7          .              .             1.0000         EPS         
+1.3.8          .              .             1.0000         EPS         
+1.3.9          .              .             1.0000         EPS         
+1.4.0          .              .             1.0000         EPS         
+1.4.1          .              .             1.0000         EPS         
+1.4.2          .              .             1.0000         EPS         
+1.4.3          .              .             1.0000         EPS         
+1.4.4          .              .              .             EPS         
+1.4.5          .              .             1.0000         EPS         
+1.4.6          .              .             1.0000         EPS         
+1.4.7          .              .             1.0000         EPS         
+1.4.8          .              .             1.0000         EPS         
+1.4.9          .              .             1.0000         EPS         
+1.5.0          .              .             1.0000         EPS         
+1.5.1          .              .             1.0000         EPS         
+1.5.2          .              .             1.0000         EPS         
+1.5.3          .              .             1.0000         EPS         
+1.5.4          .              .             1.0000         EPS         
+1.5.5          .              .              .             EPS         
+1.5.6          .             1.0000         1.0000         EPS         
+1.5.7          .              .             1.0000         EPS         
+1.5.8          .              .             1.0000         EPS         
+1.5.9          .              .             1.0000         EPS         
+1.6.0          .              .             1.0000         EPS         
+1.6.1          .              .             1.0000         EPS         
+1.6.2          .              .             1.0000         EPS         
+1.6.3          .             1.0000         1.0000         EPS         
+1.6.4          .              .             1.0000         EPS         
+1.6.5          .              .             1.0000         EPS         
+1.6.6          .              .              .             EPS         
+1.6.7          .              .             1.0000         EPS         
+1.6.8          .              .             1.0000         EPS         
+1.6.9          .              .             1.0000         EPS         
+1.7.0          .              .             1.0000         EPS         
+1.7.1          .              .             1.0000         EPS         
+1.7.2          .              .             1.0000         EPS         
+1.7.3          .              .             1.0000         EPS         
+1.7.4          .              .             1.0000         EPS         
+1.7.5          .              .             1.0000         EPS         
+1.7.6          .              .             1.0000         EPS         
+1.7.7          .              .              .             EPS         
+1.7.8          .              .             1.0000         EPS         
+1.7.9          .              .             1.0000         EPS         
+1.8.0          .              .             1.0000         EPS         
+1.8.1          .              .             1.0000         EPS         
+1.8.2          .              .             1.0000         EPS         
+1.8.3          .              .             1.0000         EPS         
+1.8.4          .              .             1.0000         EPS         
+1.8.5          .              .             1.0000         EPS         
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:00:31 Page 22
+TSP Model
+Solution Report     SOLVE mtz Using MIP From line 64
+
+
+     VAR X  Travel assignment
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+1.8.6          .              .             1.0000         EPS         
+1.8.7          .              .             1.0000         EPS         
+1.8.8          .              .              .             EPS         
+1.8.9          .              .              .             EPS         
+1.9.0          .              .             1.0000         EPS         
+1.9.1          .              .             1.0000         EPS         
+1.9.2          .              .             1.0000         EPS         
+1.9.3          .              .             1.0000         EPS         
+1.9.4          .              .             1.0000         EPS         
+1.9.5          .              .             1.0000         EPS         
+1.9.6          .              .             1.0000         EPS         
+1.9.7          .              .             1.0000         EPS         
+1.9.8          .              .             1.0000         EPS         
+1.9.9          .              .              .             EPS         
+2.0.0          .              .              .             EPS         
+2.0.1          .              .             1.0000         EPS         
+2.0.2          .              .             1.0000         EPS         
+2.0.3          .              .             1.0000         EPS         
+2.0.4          .             1.0000         1.0000         EPS         
+2.0.5          .              .             1.0000         EPS         
+2.0.6          .              .             1.0000         EPS         
+2.0.7          .              .             1.0000         EPS         
+2.0.8          .              .             1.0000         EPS         
+2.0.9          .              .             1.0000         EPS         
+2.1.0          .              .             1.0000         EPS         
+2.1.1          .              .              .             EPS         
+2.1.2          .              .             1.0000         EPS         
+2.1.3          .              .             1.0000         EPS         
+2.1.4          .              .             1.0000         EPS         
+2.1.5          .              .             1.0000         EPS         
+2.1.6          .              .             1.0000         EPS         
+2.1.7          .              .             1.0000         EPS         
+2.1.8          .              .             1.0000         EPS         
+2.1.9          .              .             1.0000         EPS         
+2.2.0          .              .             1.0000         EPS         
+2.2.1          .              .             1.0000         EPS         
+2.2.2          .              .              .             EPS         
+2.2.3          .              .             1.0000         EPS         
+2.2.4          .              .             1.0000         EPS         
+2.2.5          .              .             1.0000         EPS         
+2.2.6          .              .             1.0000         EPS         
+2.2.7          .             1.0000         1.0000         EPS         
+2.2.8          .              .             1.0000         EPS         
+2.2.9          .              .             1.0000         EPS         
+2.3.0          .              .             1.0000         EPS         
+2.3.1          .              .             1.0000         EPS         
+2.3.2          .              .             1.0000         EPS         
+2.3.3          .              .              .             EPS         
+2.3.4          .              .             1.0000         EPS         
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:00:31 Page 23
+TSP Model
+Solution Report     SOLVE mtz Using MIP From line 64
+
+
+     VAR X  Travel assignment
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+2.3.5          .              .             1.0000         EPS         
+2.3.6          .              .             1.0000         EPS         
+2.3.7          .              .             1.0000         EPS         
+2.3.8          .              .             1.0000         EPS         
+2.3.9          .              .             1.0000         EPS         
+2.4.0          .              .             1.0000         EPS         
+2.4.1          .              .             1.0000         EPS         
+2.4.2          .             1.0000         1.0000         EPS         
+2.4.3          .              .             1.0000         EPS         
+2.4.4          .              .              .             EPS         
+2.4.5          .              .             1.0000         EPS         
+2.4.6          .              .             1.0000         EPS         
+2.4.7          .              .             1.0000         EPS         
+2.4.8          .              .             1.0000         EPS         
+2.4.9          .              .             1.0000         EPS         
+2.5.0          .              .             1.0000         EPS         
+2.5.1          .              .             1.0000         EPS         
+2.5.2          .              .             1.0000         EPS         
+2.5.3          .              .             1.0000         EPS         
+2.5.4          .              .             1.0000         EPS         
+2.5.5          .              .              .             EPS         
+2.5.6          .              .             1.0000         EPS         
+2.5.7          .              .             1.0000         EPS         
+2.5.8          .              .             1.0000         EPS         
+2.5.9          .              .             1.0000         EPS         
+2.6.0          .              .             1.0000         EPS         
+2.6.1          .              .             1.0000         EPS         
+2.6.2          .              .             1.0000         EPS         
+2.6.3          .              .             1.0000         EPS         
+2.6.4          .              .             1.0000         EPS         
+2.6.5          .              .             1.0000         EPS         
+2.6.6          .              .              .             EPS         
+2.6.7          .              .             1.0000         EPS         
+2.6.8          .              .             1.0000         EPS         
+2.6.9          .              .             1.0000         EPS         
+2.7.0          .             1.0000         1.0000         EPS         
+2.7.1          .              .             1.0000         EPS         
+2.7.2          .              .             1.0000         EPS         
+2.7.3          .              .             1.0000         EPS         
+2.7.4          .              .             1.0000         EPS         
+2.7.5          .              .             1.0000         EPS         
+2.7.6          .              .             1.0000         EPS         
+2.7.7          .              .              .             EPS         
+2.7.8          .              .             1.0000         EPS         
+2.7.9          .              .             1.0000         EPS         
+2.8.0          .              .             1.0000         EPS         
+2.8.1          .              .             1.0000         EPS         
+2.8.2          .              .             1.0000         EPS         
+2.8.3          .              .             1.0000         EPS         
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:00:31 Page 24
+TSP Model
+Solution Report     SOLVE mtz Using MIP From line 64
+
+
+     VAR X  Travel assignment
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+2.8.4          .              .             1.0000         EPS         
+2.8.5          .              .             1.0000         EPS         
+2.8.6          .              .             1.0000         EPS         
+2.8.7          .              .             1.0000         EPS         
+2.8.8          .              .              .             EPS         
+2.8.9          .              .              .             EPS         
+2.9.0          .              .             1.0000         EPS         
+2.9.1          .              .             1.0000         EPS         
+2.9.2          .              .             1.0000         EPS         
+2.9.3          .              .             1.0000         EPS         
+2.9.4          .              .             1.0000         EPS         
+2.9.5          .              .             1.0000         EPS         
+2.9.6          .              .             1.0000         EPS         
+2.9.7          .              .             1.0000         EPS         
+2.9.8          .              .             1.0000         EPS         
+2.9.9          .              .              .             EPS         
+3.0.0          .              .              .             0.8800      
+3.0.1          .              .             1.0000         3.6700      
+3.0.2          .              .             1.0000         4.1600      
+3.0.3          .              .             1.0000         5.9200      
+3.0.4          .              .             1.0000         1.5700      
+3.0.5          .              .             1.0000         1.5900      
+3.0.6          .              .             1.0000         3.6000      
+3.0.7          .              .             1.0000         5.0200      
+3.0.8          .             1.0000         1.0000         1.6800      
+3.0.9          .              .             1.0000         3.7800      
+3.1.0          .              .             1.0000         6.8900      
+3.1.1          .              .              .             0.5200      
+3.1.2          .              .             1.0000         1.1400      
+3.1.3          .              .             1.0000         1.5200      
+3.1.4          .              .             1.0000         2.0100      
+3.1.5          .              .             1.0000        10.2400      
+3.1.6          .              .             1.0000         4.9400      
+3.1.7          .              .             1.0000         0.9800      
+3.1.8          .              .             1.0000         5.1300      
+3.1.9          .             1.0000         1.0000         2.2700      
+3.2.0          .              .             1.0000         5.3200      
+3.2.1          .              .             1.0000         8.5800      
+3.2.2          .              .              .             3.1900      
+3.2.3          .              .             1.0000         2.4000      
+3.2.4          .              .             1.0000         1.6000      
+3.2.5          .              .             1.0000         2.5900      
+3.2.6          .              .             1.0000         1.6100      
+3.2.7          .              .             1.0000         1.4700      
+3.2.8          .              .             1.0000         4.5100      
+3.2.9          .              .             1.0000         2.1900      
+3.3.0          .              .             1.0000         4.3500      
+3.3.1          .              .             1.0000         2.4200      
+3.3.2          .              .             1.0000         1.9400      
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:00:31 Page 25
+TSP Model
+Solution Report     SOLVE mtz Using MIP From line 64
+
+
+     VAR X  Travel assignment
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+3.3.3          .              .              .             1.1600      
+3.3.4          .              .             1.0000         2.4800      
+3.3.5          .              .             1.0000         5.5700      
+3.3.6          .              .             1.0000        12.3200      
+3.3.7          .              .             1.0000         1.1400      
+3.3.8          .              .             1.0000         5.1500      
+3.3.9          .              .             1.0000         1.8500      
+3.4.0          .              .             1.0000         3.9100      
+3.4.1          .              .             1.0000         3.0900      
+3.4.2          .              .             1.0000         2.9500      
+3.4.3          .              .             1.0000         1.4200      
+3.4.4          .              .              .             0.6200      
+3.4.5          .              .             1.0000         1.2200      
+3.4.6          .              .             1.0000         2.9000      
+3.4.7          .              .             1.0000         2.5600      
+3.4.8          .              .             1.0000         1.2500      
+3.4.9          .              .             1.0000         6.6300      
+3.5.0          .              .             1.0000         6.4800      
+3.5.1          .              .             1.0000         5.4800      
+3.5.2          .              .             1.0000         2.1200      
+3.5.3          .              .             1.0000         3.1000      
+3.5.4          .              .             1.0000         1.2200      
+3.5.5          .              .              .             0.9400      
+3.5.6          .              .             1.0000         0.7100      
+3.5.7          .              .             1.0000         1.9700      
+3.5.8          .              .             1.0000         0.6900      
+3.5.9          .              .             1.0000         2.6500      
+3.6.0          .              .             1.0000         2.9900      
+3.6.1          .              .             1.0000         3.8400      
+3.6.2          .              .             1.0000         3.7000      
+3.6.3          .              .             1.0000         2.3600      
+3.6.4          .              .             1.0000         3.9000      
+3.6.5          .              .             1.0000         4.7300      
+3.6.6          .              .              .             2.1300      
+3.6.7          .              .             1.0000         2.7200      
+3.6.8          .              .             1.0000         3.3500      
+3.6.9          .              .             1.0000         2.2300      
+3.7.0          .              .             1.0000         2.8100      
+3.7.1          .              .             1.0000         1.1200      
+3.7.2          .              .             1.0000         1.0400      
+3.7.3          .              .             1.0000         6.6900      
+3.7.4          .              .             1.0000        10.4300      
+3.7.5          .              .             1.0000         2.8200      
+3.7.6          .              .             1.0000         5.6800      
+3.7.7          .              .              .             0.5600      
+3.7.8          .              .             1.0000         1.8800      
+3.7.9          .              .             1.0000         2.4100      
+3.8.0          .              .             1.0000         3.0700      
+3.8.1          .             1.0000         1.0000         2.3300      
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:00:31 Page 26
+TSP Model
+Solution Report     SOLVE mtz Using MIP From line 64
+
+
+     VAR X  Travel assignment
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+3.8.2          .              .             1.0000         2.5100      
+3.8.3          .              .             1.0000        14.1200      
+3.8.4          .              .             1.0000         2.0500      
+3.8.5          .              .             1.0000         1.5000      
+3.8.6          .              .             1.0000         3.5800      
+3.8.7          .              .             1.0000         4.4800      
+3.8.8          .              .              .             0.6400      
+3.8.9          .              .              .             3.5600      
+3.9.0          .             1.0000         1.0000         2.8600      
+3.9.1          .              .             1.0000         2.5800      
+3.9.2          .              .             1.0000         2.5100      
+3.9.3          .              .             1.0000         1.3400      
+3.9.4          .              .             1.0000         3.1800      
+3.9.5          .              .             1.0000         3.7100      
+3.9.6          .              .             1.0000         2.5200      
+3.9.7          .              .             1.0000         3.5600      
+3.9.8          .              .             1.0000         2.5800      
+3.9.9          .              .              .             2.8100      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR OBJ               -INF            9.1400        +INF             .          
+
+  OBJ  Objective function
+
+---- VAR U  Position of node in tour
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+1.0         1.0000         1.0000        10.0000         EPS         
+1.1         1.0000         1.0000        10.0000         EPS         
+1.2         1.0000         1.0000        10.0000         EPS         
+1.3         1.0000        10.0000        10.0000         EPS         
+1.4         1.0000         1.0000        10.0000         EPS         
+1.5         1.0000         2.0000        10.0000          .          
+1.6         1.0000         9.0000        10.0000          .          
+1.7         1.0000         1.0000        10.0000         EPS         
+1.8         1.0000         1.0000        10.0000         EPS         
+1.9         1.0000         1.0000        10.0000         EPS         
+2.0         1.0000         1.0000        10.0000         EPS         
+2.1         1.0000         1.0000        10.0000         EPS         
+2.2         1.0000         9.0000        10.0000          .          
+2.3         1.0000         1.0000        10.0000         EPS         
+2.4         1.0000         2.0000        10.0000          .          
+2.5         1.0000         1.0000        10.0000         EPS         
+2.6         1.0000         1.0000        10.0000         EPS         
+2.7         1.0000        10.0000        10.0000         EPS         
+2.8         1.0000         1.0000        10.0000         EPS         
+2.9         1.0000         1.0000        10.0000         EPS         
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:00:31 Page 27
+TSP Model
+Solution Report     SOLVE mtz Using MIP From line 64
+
+
+     VAR U  Position of node in tour
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+3.0         1.0000         1.0000        10.0000         EPS         
+3.1         1.0000         9.0000        10.0000          .          
+3.2         1.0000         1.0000        10.0000         EPS         
+3.3         1.0000         1.0000        10.0000         EPS         
+3.4         1.0000         1.0000        10.0000         EPS         
+3.5         1.0000         1.0000        10.0000         EPS         
+3.6         1.0000         1.0000        10.0000         EPS         
+3.7         1.0000         1.0000        10.0000         EPS         
+3.8         1.0000         2.0000        10.0000          .          
+3.9         1.0000        10.0000        10.0000         EPS         
+
+---- VAR len_each  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1        -INF            9.0100        +INF             .          
+2        -INF            8.8000        +INF             .          
+3        -INF            9.1400        +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows                                                                                                                                                                12/17/17 20:00:31 Page 28
+TSP Model
+E x e c u t i o n
+
+
+----     67 VARIABLE X.L  Travel assignment
+
+1.0.5 1
+1.3.0 1
+1.5.6 1
+1.6.3 1
+2.0.4 1
+2.2.7 1
+2.4.2 1
+2.7.0 1
+3.0.8 1
+3.1.9 1
+3.8.1 1
+3.9.0 1
+
+
+
+EXECUTION TIME       =        1.359 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
+
+
+USER: Course License UW-Madison Fall 2017            G170906/0001AS-GEN
+      Applied Optimization and Modeling CS/ECE/ISyE 524 - AAE 52DC13532
+      License for teaching and research at degree granting institutions
+
+
+**** FILE SUMMARY
+
+Input      D:\Learning\Graduate\isye524\project\submit\Model1\experiments_run\temp.gms
+Output     D:\Learning\Graduate\isye524\project\submit\Model1\experiments_run\temp.lst
