@@ -1,5 +1,5 @@
 # TSP-project
-This is the project done in CS5/ISYE 524 introduction to optimization/n
+This is the project done in CS5/ISYE 524 introduction to optimization
 In this project, we start from a baisc Travelling salesman problem and develop it into a complicated real problem-delivering pizza 
 for a resturant in Madison. 
 The project totally contains 3 models, developing from the very basic idea to the complicated model.
